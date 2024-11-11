@@ -79,4 +79,24 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// test Hieu
+// Forgot Password
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    await userService.sendPasswordResetEmail(email);
+    res.status(200).send('Password reset email sent.');
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+// Reset Password
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, currentPassword, newPassword } = req.body;
+    await userService.resetPassword(token, currentPassword, newPassword);
+    res.status(200).send('Password reset successfully.');
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
