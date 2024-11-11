@@ -145,6 +145,7 @@ exports.deleteUser = async (userId) => {
   }
 };
 
+// send a reset pass email
 exports.sendPasswordResetEmail = async (email) => {
   const user = await User.findOne({ email });
   if (!user) throw new Error('User not found.');
@@ -157,6 +158,7 @@ exports.sendPasswordResetEmail = async (email) => {
   await emailService.sendPasswordResetEmail(email, resetUrl);
 };
 
+// reset user password when forget
 exports.resetPassword = async (token, currentPassword, newPassword) => {
   const user = await User.findOne({ confirmationToken: token });
   if (!user) throw new Error('Invalid or expired token.');

@@ -35,6 +35,7 @@ exports.sendConfirmationEmail = async (to, token) => {
   }
 };
 
+// Send reset password email
 exports.sendPasswordResetEmail = async (to, url) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
