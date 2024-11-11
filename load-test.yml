@@ -1,0 +1,10 @@
+config:
+  target: 'http://localhost:3000'  # Your server's URL
+  phases:
+    - duration: 30s  # Test duration in seconds
+      arrivalRate: 500  # 100 requests per second (adjust this for 100 simultaneous requests)
+
+scenarios:
+  - flow:
+      - get:
+          url: "/greeting"  # The endpoint you want to test
