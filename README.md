@@ -1,30 +1,19 @@
-**After clone run theses command:**
+# Super Server
+
+This project provides an API with user authentication features, including sign-up functionality. Follow the steps below to clone and run the project.
+
+## Getting Started
+
+### Clone the Repository
+After cloning the repository, navigate to the project directory and run the following commands:
+
+```bash
+# Navigate to your project path
 PS C:\yourpath\super-server> 
-Git fetch
-Git pull
-npm i
 
-**To run the project**
-PS C:\yourpath\super-server>\src\
-Nodemon index.js
+# Update the repository
+git fetch
+git pull
 
-Test - API Endpoints
-**Sign up:**
-[httpl/api/auth/signup](http://localhost:3000/api/auth/signup)
-
-Example data:
-{
-  "email": "youremail@gmail.com",
-  "password": "password123",
-  "dateOfBirth": "1990-01-01",
-  "gender": "male"
-}
-
-Fields have to enter
-const { email, password, dateOfBirth, gender } = req.body;
-
-
-
- 
-
-
+# Install dependencies
+npm install
