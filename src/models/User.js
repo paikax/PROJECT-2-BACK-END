@@ -42,7 +42,12 @@ const userSchema = new mongoose.Schema({
     default: false,
   },
   confirmationToken: {
+    type: String, 
+  },
+  imageUrl: {
     type: String,
+    default: null, // Set default to null
+    trim: true,
   },
 }, { timestamps: true });
 
