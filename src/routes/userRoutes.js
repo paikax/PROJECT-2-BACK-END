@@ -1,5 +1,6 @@
 const express = require('express');
 const userController = require('../controllers/usersController');
+const { checkRole } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 router.post('/auth/signup', userController.register);
@@ -8,7 +9,7 @@ router.post('/auth/confirm', userController.confirmEmail);
 router.post('/auth/signin', userController.login);
 
 // Get all users (Admin route)
-router.get('/users', userController.getAllUsers);
+router.get('/users', checkRole(['admin']), userController.getAllUsers);
 
 // Get single user
 router.get('/user/:id', userController.getUser);

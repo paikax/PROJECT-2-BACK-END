@@ -4,9 +4,9 @@ const crypto = require('crypto');
 const emailService = require('./emailService');
 const jwt = require('jsonwebtoken');
 
-exports.registerUser = async (email, password, dateOfBirth, gender) => {
+exports.registerUser = async (email, password, dateOfBirth, phone, address, gender, role = 'user') => {
   // Validate the input fields
-  if (!email || !password || !dateOfBirth || !gender) {
+  if (!email || !password || !dateOfBirth || !phone || !address || !gender) {
     throw new Error('All fields are required.');
   }
   
@@ -31,6 +31,10 @@ exports.registerUser = async (email, password, dateOfBirth, gender) => {
   // Validate date of birth (user must be at least 18 years old)
   const dob = new Date(dateOfBirth);
   const age = new Date().getFullYear() - dob.getFullYear();
+  const monthDifference = new Date().getMonth() - dob.getMonth();
+  if (monthDifference < 0 || (monthDifference === 0 && new Date().getDate() < dob.getDate())) {
+    age--;
+  }
   if (age < 18) {
     throw new Error('You must be at least 18 years old.');
   }
@@ -42,7 +46,7 @@ exports.registerUser = async (email, password, dateOfBirth, gender) => {
 
   // Generate a confirmation token and create the user
   const confirmationToken = crypto.randomBytes(32).toString('hex');
-  const user = new User({ email, password, dateOfBirth, gender, confirmationToken });
+  const user = new User({ email, password, dateOfBirth, phone, address, gender, role, confirmationToken });
   
   await user.save();
   await emailService.sendConfirmationEmail(email, confirmationToken);
@@ -112,8 +116,7 @@ exports.updateUser = async (userId, updateData) => {
       throw new Error('Email cannot be updated.');
     }
 
-    // Step 2: Validate that only allowed fields are present in the update data
-    const allowedUpdates = ['password', 'dateOfBirth', 'gender', 'imageUrl'];
+    const allowedUpdates = ['password', 'dateOfBirth', 'phone', 'address', 'gender', 'imageUrl'];
     const updateFields = Object.keys(updateData);
     for (let field of updateFields) {
       if (!allowedUpdates.includes(field)) {
@@ -124,6 +127,8 @@ exports.updateUser = async (userId, updateData) => {
     // Step 3: Apply valid updates
     if (updateData.password) user.password = updateData.password;
     if (updateData.dateOfBirth) user.dateOfBirth = updateData.dateOfBirth;
+    if (updateData.phone) user.phone = updateData.phone;
+    if (updateData.address) user.address = updateData.address;
     if (updateData.gender) user.gender = updateData.gender;
     if (updateData.imageUrl) user.imageUrl = updateData.imageUrl;
 
@@ -134,6 +139,7 @@ exports.updateUser = async (userId, updateData) => {
     throw new Error('Failed to update user: ' + err.message);
   }
 };
+
 // Delete a user by ID
 exports.deleteUser = async (userId) => {
   try {
@@ -145,7 +151,7 @@ exports.deleteUser = async (userId) => {
   }
 };
 
-// send a reset pass email
+// Send a password reset email
 exports.sendPasswordResetEmail = async (email) => {
   const user = await User.findOne({ email });
   if (!user) throw new Error('User not found.');
@@ -158,7 +164,7 @@ exports.sendPasswordResetEmail = async (email) => {
   await emailService.sendPasswordResetEmail(email, resetUrl);
 };
 
-// reset user password when forget
+// Reset user password when forgotten
 exports.resetPassword = async (token, currentPassword, newPassword) => {
   const user = await User.findOne({ confirmationToken: token });
   if (!user) throw new Error('Invalid or expired token.');

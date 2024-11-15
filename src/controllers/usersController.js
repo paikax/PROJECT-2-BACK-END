@@ -3,8 +3,8 @@ const userService = require('../services/userService');
 
 exports.register = async (req, res) => {
   try {
-    const { email, password, dateOfBirth, gender } = req.body;
-    await userService.registerUser(email, password, dateOfBirth, gender);
+    const { email, password, dateOfBirth, phone, address, gender, role } = req.body;
+    await userService.registerUser(email, password, dateOfBirth, phone, address, gender, role);
     res.status(201).send('Registration successful! Please check your email to confirm your account.');
   } catch (err) {
     // Send a more specific error message from the exception
@@ -60,9 +60,9 @@ exports.getUser = async (req, res) => {
 
 // Update user
 exports.updateUser = async (req, res) => {
-  const { password, dateOfBirth, gender, imageUrl } = req.body;
+  const { password, dateOfBirth, phone, address, gender, imageUrl } = req.body;
   try {
-    const updatedUser = await userService.updateUser(req.params.id, { password, dateOfBirth, gender, imageUrl });
+    const updatedUser = await userService.updateUser(req.params.id, { password, dateOfBirth, phone, address, gender, imageUrl });
     res.status(200).json({ message: 'User updated successfully', user: updatedUser });
   } catch (err) {
     res.status(400).json({ error: err.message });

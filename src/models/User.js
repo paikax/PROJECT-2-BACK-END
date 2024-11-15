@@ -32,6 +32,22 @@ const userSchema = new mongoose.Schema({
       message: props => `${props.value} is not a valid date!`
     }
   },
+  phone: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function(v) {
+        const phoneRegex = /^[0-9]{10,15}$/; // Simplified phone validation
+        return phoneRegex.test(v);
+      },
+      message: props => `${props.value} is not a valid phone number!`
+    }
+  },
+  address: {
+    type: String,
+    required: true,
+    trim: true,
+  },
   gender: {
     type: String,
     enum: ['male', 'female', 'other'],
@@ -46,9 +62,14 @@ const userSchema = new mongoose.Schema({
   },
   imageUrl: {
     type: String,
-    default: null, // Set default to null
+    default: null,
     trim: true,
   },
+  role: {
+    type: String,
+    enum: ['admin', 'user', 'seller'],
+    default: 'user',
+  }
 }, { timestamps: true });
 
 // Hash password before saving the user
