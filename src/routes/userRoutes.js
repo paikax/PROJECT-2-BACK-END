@@ -1,22 +1,43 @@
 const express = require('express');
 const userController = require('../controllers/usersController');
 const router = express.Router();
+const verifyToken = require('../middleware/authMiddleware');
+const authorizeRole = require('../middleware/roleMiddleware');
 
-router.post('/auth/signup', userController.register);
-// router.get('/auth/confirm/:token', authController.confirmEmail);
-router.post('/auth/confirm', userController.confirmEmail);
-router.post('/auth/signin', userController.login);
 
 // Get all users (Admin route)
-router.get('/users', userController.getAllUsers);
+router.get('/admin',
+    verifyToken,
+    authorizeRole("admin"), (req, res) => {
+    res.json({message: 'admin'});
+});
+
+
+router.get('/users',
+    verifyToken,
+    authorizeRole("admin", "manager"),
+    userController.getAllUsers);
+
+// Both admin and manager can access this router
+router.get('/manager', verifyToken, (req, res) => {
+    res.json({message: 'manager'});
+});
+
+// All can access this route
+router.get('/all',
+    verifyToken,
+    authorizeRole("admin", "manager", "user"),
+    (req, res) => {
+    res.json({message: 'all'});
+});
 
 // Get single user
-router.get('/user/:id', userController.getUser);
+router.get('/user/:id', verifyToken, userController.getUser);
 
 // Update user
-router.put('/user/:id', userController.updateUser);
+router.put('/user/:id', verifyToken, userController.updateUser);
 
 // Delete user
-router.delete('/user/:id', userController.deleteUser);
+router.delete('/user/:id', verifyToken, userController.deleteUser);
 
 module.exports = router;

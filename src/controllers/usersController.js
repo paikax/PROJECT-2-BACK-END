@@ -1,40 +1,6 @@
 const userService = require('../services/userService');
 
 
-exports.register = async (req, res) => {
-  try {
-    const { email, password, dateOfBirth, gender } = req.body;
-    await userService.registerUser(email, password, dateOfBirth, gender);
-    res.status(201).send('Registration successful! Please check your email to confirm your account.');
-  } catch (err) {
-    // Send a more specific error message from the exception
-    res.status(400).json({ error: err.message });
-  }
-};
-
-exports.confirmEmail = async (req, res) => {
-  try {
-    const { token } = req.query;
-
-    await userService.confirmUserEmail(token);
-    res.status(200).send('Email confirmed! You can now log in.');
-  } catch (err) {
-    // Send a more specific error message from the exception
-    res.status(400).json({ error: err.message });
-  }
-};
-
-exports.login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const token = await userService.loginUser(email, password);
-    res.status(200).json({ token });
-  } catch (err) {
-    // Send a more specific error message from the exception
-    res.status(400).json({ error: err.message });
-  }
-};
-
 // Get all users (for admin only, maybe add role checking in the future)
 exports.getAllUsers = async (req, res) => {
   try {
@@ -80,3 +46,8 @@ exports.deleteUser = async (req, res) => {
 };
 
 // test Hieu
+
+
+function hello () {
+  return "Hello world";
+}
