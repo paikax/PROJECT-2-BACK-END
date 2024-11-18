@@ -3,6 +3,10 @@ const bcrypt = require('bcryptjs');
 
 // Define the User schema
 const userSchema = new mongoose.Schema({
+  fullName: {
+    type: String,
+    required: true,
+  },
   email: {
     type: String,
     required: true,
@@ -15,21 +19,6 @@ const userSchema = new mongoose.Schema({
         return emailRegex.test(v);
       },
       message: props => `${props.value} is not a valid email!`
-    }
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: 6,
-  },
-  dateOfBirth: {
-    type: Date,
-    required: true,
-    validate: {
-      validator: function(v) {
-        return v instanceof Date && !isNaN(v);
-      },
-      message: props => `${props.value} is not a valid date!`
     }
   },
   phone: {
@@ -47,6 +36,21 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
+  },
+  password: {
+    type: String,
+    required: true,
+    minlength: 6,
+  },
+  dateOfBirth: {
+    type: Date,
+    required: true,
+    validate: {
+      validator: function(v) {
+        return v instanceof Date && !isNaN(v);
+      },
+      message: props => `${props.value} is not a valid date!`
+    }
   },
   gender: {
     type: String,
@@ -67,9 +71,10 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
+    required: true,
     enum: ['admin', 'user', 'seller'],
     default: 'user',
-  }
+  },
 }, { timestamps: true });
 
 // Hash password before saving the user
