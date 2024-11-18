@@ -5,6 +5,8 @@ require('./config/db'); // Import the MongoDB connection
 const authRoutes = require('./routes/authRoutes')
 const userRoutes = require('./routes/userRoutes')
 require('dotenv').config({ path: "./../development/.env"});
+const cors = require('cors');
+
 
 const app = express();
 
