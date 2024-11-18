@@ -44,5 +44,6 @@ router.delete('/user/:id', verifyToken, userController.deleteUser);
 router.post('/user/forgot-password', userController.forgotPassword);
 // Reset password
 router.post('/user/reset-password', userController.resetPassword);
-
+// Refresh token
+router.post('/refresh-token', userController.refreshToken);
 module.exports = router;

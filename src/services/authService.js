@@ -81,11 +81,17 @@ exports.loginUser = async (email, password) => {
         throw new Error('Please confirm your email first.');
     }
 
-    // Generate a JWT token
-    const token = jwt.sign(
+    // Generate tokens
+    const accessToken = jwt.sign(
         { id: user._id, role: user.role },
         process.env.JWT_SECRET,
-        { expiresIn: '1h' }
+        { expiresIn: '15m' } // Short-lived
     );
-    return token;
+
+    const refreshToken = jwt.sign(
+        { id: user._id },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: '3d' } // Long-lived
+    );
+    return { accessToken, refreshToken };
 };
