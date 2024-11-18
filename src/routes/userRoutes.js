@@ -33,17 +33,16 @@ router.get('/all',
 
 // Get single user
 router.get('/user/:id', verifyToken, userController.getUser);
-
 // Update user
 router.put('/user/:id', verifyToken, userController.updateUser);
-
 // Delete user
 router.delete('/user/:id', verifyToken, userController.deleteUser);
-
 // Request password reset
 router.post('/user/forgot-password', userController.forgotPassword);
 // Reset password
 router.post('/user/reset-password', userController.resetPassword);
 // Refresh token
 router.post('/refresh-token', userController.refreshToken);
+
+
 module.exports = router;

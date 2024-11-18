@@ -8,6 +8,11 @@ require('dotenv').config({ path: "./../development/.env"});
 
 const app = express();
 
+app.use(cors({
+    origin: process.env.CLIENT_URL, // Replace with your React app's URL
+    methods: 'GET,POST,PUT,DELETE', // Specify allowed HTTP methods
+    credentials: true // Enable if cookies/credentials are required
+}));
 app.use(express.json());
 app.use(compression());
 app.use(rateLimiter); // Apply rate limiter middleware
