@@ -4,9 +4,9 @@ const crypto = require('crypto');
 const emailService = require('./emailService');
 const jwt = require('jsonwebtoken');
 
-exports.registerUser = async (email, password, dateOfBirth, gender) => {
+exports.registerUser = async (email, password, dateOfBirth, phone, address, gender, role = 'user') => {
     // Validate the input fields
-    if (!email || !password || !dateOfBirth || !gender) {
+    if (!email || !password || !dateOfBirth || !gender || !phone || !address) {
         throw new Error('All fields are required.');
     }
 
@@ -31,8 +31,9 @@ exports.registerUser = async (email, password, dateOfBirth, gender) => {
     // Validate date of birth (user must be at least 18 years old)
     const dob = new Date(dateOfBirth);
     const age = new Date().getFullYear() - dob.getFullYear();
-    if (age < 18) {
-        throw new Error('You must be at least 18 years old.');
+    const monthDifference = new Date().getMonth() - dob.getMonth();
+    if (monthDifference < 0 || (monthDifference === 0 && new Date().getDate() < dob.getDate())) {
+        age--;
     }
 
     // Validate gender
@@ -42,7 +43,7 @@ exports.registerUser = async (email, password, dateOfBirth, gender) => {
 
     // Generate a confirmation token and create the user
     const confirmationToken = crypto.randomBytes(32).toString('hex');
-    const user = new User({ email, password, dateOfBirth, gender, confirmationToken });
+    const user = new User({ email, password, dateOfBirth, phone, address, gender, role, confirmationToken });
 
     await user.save();
     await emailService.sendConfirmationEmail(email, confirmationToken);

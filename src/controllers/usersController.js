@@ -26,9 +26,9 @@ exports.getUser = async (req, res) => {
 
 // Update user
 exports.updateUser = async (req, res) => {
-  const { password, dateOfBirth, gender, imageUrl } = req.body;
+  const { password, dateOfBirth, phone, address, gender, imageUrl } = req.body;
   try {
-    const updatedUser = await userService.updateUser(req.params.id, { password, dateOfBirth, gender, imageUrl });
+    const updatedUser = await userService.updateUser(req.params.id, { password, dateOfBirth, phone, address, gender, imageUrl });
     res.status(200).json({ message: 'User updated successfully', user: updatedUser });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -45,9 +45,25 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// test Hieu
+// Forgot Password
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    await userService.sendPasswordResetEmail(email);
+    res.status(200).send('Password reset email sent.');
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+// Reset Password
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, currentPassword, newPassword } = req.body;
+    await userService.resetPassword(token, currentPassword, newPassword);
+    res.status(200).send('Password reset successfully.');
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
 
 
-function hello () {
-  return "Hello world";
-}

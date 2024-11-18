@@ -3,8 +3,8 @@ const authService = require('../services/authService');
 
 exports.register = async (req, res) => {
     try {
-        const { email, password, dateOfBirth, gender } = req.body;
-        await authService.registerUser(email, password, dateOfBirth, gender);
+        const { email, password, dateOfBirth, phone, address, gender, role } = req.body;
+        await userService.registerUser(email, password, dateOfBirth, phone, address, gender, role);
         res.status(201).send('Registration successful! Please check your email to confirm your account.');
     } catch (err) {
         // Send a more specific error message from the exception

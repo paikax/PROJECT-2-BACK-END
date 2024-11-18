@@ -40,4 +40,9 @@ router.put('/user/:id', verifyToken, userController.updateUser);
 // Delete user
 router.delete('/user/:id', verifyToken, userController.deleteUser);
 
+// Request password reset
+router.post('/user/forgot-password', userController.forgotPassword);
+// Reset password
+router.post('/user/reset-password', userController.resetPassword);
+
 module.exports = router;

@@ -17,6 +17,22 @@ const userSchema = new mongoose.Schema({
       message: props => `${props.value} is not a valid email!`
     }
   },
+  phone: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function(v) {
+        const phoneRegex = /^[0-9]{10,15}$/; // Simplified phone validation
+        return phoneRegex.test(v);
+      },
+      message: props => `${props.value} is not a valid phone number!`
+    }
+  },
+  address: {
+    type: String,
+    required: true,
+    trim: true,
+  },
   password: {
     type: String,
     required: true,
@@ -48,6 +64,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null, // Set default to null
     trim: true,
+  },
+  role: {
+    type: String,
+    enum: ['admin', 'user', 'seller'],
+    default: 'user',
   },
 }, { timestamps: true });
 
