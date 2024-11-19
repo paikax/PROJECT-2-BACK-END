@@ -94,7 +94,8 @@ exports.loginUser = async (email, password) => {
     const refreshToken = jwt.sign(
         {
             id: user._id,
-            email: user.email, // Including email for token verification purposes
+            email: user.email,
+            role: user.role,
         },
         process.env.REFRESH_TOKEN_SECRET,
         { expiresIn: '3d' } // Long-lived token
