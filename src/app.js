@@ -5,13 +5,15 @@ require('./config/db'); // Import the MongoDB connection
 const authRoutes = require('./routes/authRoutes')
 const userRoutes = require('./routes/userRoutes')
 require('dotenv').config({ path: "./../development/.env"});
+const cors = require('cors');
+
 
 const app = express();
 
 app.use(cors({
-    origin: process.env.CLIENT_URL, // Replace with your React app's URL
+    origin: '*', // Allow all origins
     methods: 'GET,POST,PUT,DELETE', // Specify allowed HTTP methods
-    credentials: true // Enable if cookies/credentials are required
+    credentials: false // Set to false since all origins are allowed
 }));
 app.use(express.json());
 app.use(compression());
