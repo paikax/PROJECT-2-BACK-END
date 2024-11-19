@@ -83,15 +83,26 @@ exports.loginUser = async (email, password) => {
 
     // Generate tokens
     const accessToken = jwt.sign(
-        { id: user._id, role: user.role },
+        {
+            id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            phone: user.phone,
+            address: user.address,
+            gender: user.gender,
+            role: user.role,
+        },
         process.env.JWT_SECRET,
-        { expiresIn: '15m' } // Short-lived
+        { expiresIn: '15m' } // Short-lived token
     );
 
     const refreshToken = jwt.sign(
-        { id: user._id },
+        {
+            id: user._id,
+            email: user.email, // Including email for token verification purposes
+        },
         process.env.REFRESH_TOKEN_SECRET,
-        { expiresIn: '3d' } // Long-lived
+        { expiresIn: '3d' } // Long-lived token
     );
     return { accessToken, refreshToken };
 };
