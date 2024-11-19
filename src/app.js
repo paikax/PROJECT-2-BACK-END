@@ -4,6 +4,8 @@ const rateLimiter = require('./middleware/rateLimiter');
 require('./config/db'); // Import the MongoDB connection
 const authRoutes = require('./routes/authRoutes')
 const userRoutes = require('./routes/userRoutes')
+const productRoutes = require('./routes/productRoutes')
+const categoryRoutes = require('./routes/categoryRoutes');
 require('dotenv').config({ path: "./../development/.env"});
 const cors = require('cors');
 
@@ -21,7 +23,8 @@ app.use(rateLimiter); // Apply rate limiter middleware
 
 
 app.use('/api', userRoutes, authRoutes);
-
+app.use('/api', productRoutes);
+app.use('/api', categoryRoutes); // Include category routes
 
 
 

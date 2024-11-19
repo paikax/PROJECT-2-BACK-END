@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 
 exports.registerUser = async (fullName, email, password, dateOfBirth, phone, address, gender, role = 'user') => {
     // Validate the input fields
-    if (!fullName || !email || !password || !dateOfBirth || !gender || !phone || !address) {
+    if (!fullName || !email || !password || !gender) {
         throw new Error('All fields are required.');
     }
     // Validate full name (at least 2 words and no special characters)
@@ -91,6 +91,7 @@ exports.loginUser = async (email, password) => {
             address: user.address,
             gender: user.gender,
             role: user.role,
+            imageUrl: user.imageUrl,
         },
         process.env.JWT_SECRET,
         { expiresIn: '15m' } // Short-lived token
