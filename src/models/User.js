@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema({
   },
   address: {
     type: String,
+    default: null,
     trim: true,
   },
   password: {
