@@ -6,8 +6,19 @@ const categorySchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  description: {
-    type: String,
+  imageUrls: [
+    {
+      type: String,
+      required: true,
+    },
+  ],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
   },
 });
 
