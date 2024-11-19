@@ -28,7 +28,7 @@ const productSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  variant: [
+  variants: [
     {
       name: {
         type: String,
@@ -36,21 +36,21 @@ const productSchema = new mongoose.Schema({
       },
       stockQuantity: {
         type: Number,
-        required: true,  // Ensure stockQuantity is required
-        min: 0,          // Add a minimum value of 0
+        required: true,
+        min: 0,
       },
-      attribute: [
-        {
-          name: {
-            type: String,
-            required: true,
-          },
-          value: {
-            type: String,
-            required: true,
-          },
-        },
-      ],
+    },
+  ],
+  attributes: [
+    {
+      name: {
+        type: String,
+        required: true,
+      },
+      value: {
+        type: String,
+        required: true,
+      },
     },
   ],
   rating: {

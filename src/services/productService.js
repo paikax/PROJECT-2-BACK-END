@@ -1,12 +1,13 @@
 const Product = require('../models/Product');
 
-exports.createProduct = async (name, description, price, imageUrls, variants, sellerId, categoryId, views = 0) => {
+exports.createProduct = async (name, description, price, imageUrls, variants, attributes, sellerId, categoryId, views = 0) => {
   const product = new Product({
     name,
     description,
     price,
     imageUrls,
-    variant: variants,
+    variants,    // Keep variants as is
+    attributes,  // Add attributes here
     seller: sellerId,
     category: categoryId,
     views,
