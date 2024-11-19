@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 
 exports.registerUser = async (fullName, email, password, dateOfBirth, phone, address, gender, role = 'user') => {
     // Validate the input fields
-    if (!fullName || !email || !password || !gender) {
+    if (!fullName || !email || !password ) {
         throw new Error('All fields are required.');
     }
     // Validate full name (at least 2 words and no special characters)
@@ -26,12 +26,6 @@ exports.registerUser = async (fullName, email, password, dateOfBirth, phone, add
     if (monthDifference < 0 || (monthDifference === 0 && new Date().getDate() < dob.getDate())) {
         age--;
     }
-    // Validate gender
-    if (!['male', 'female', 'other'].includes(gender)) {
-        throw new Error('Invalid gender. Must be one of "male", "female", or "other".');
-    }
-
-
     // Check if email is already registered
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -100,7 +94,8 @@ exports.loginUser = async (email, password) => {
     const refreshToken = jwt.sign(
         {
             id: user._id,
-            email: user.email, // Including email for token verification purposes
+            email: user.email,
+            role: user.role,
         },
         process.env.REFRESH_TOKEN_SECRET,
         { expiresIn: '3d' } // Long-lived token

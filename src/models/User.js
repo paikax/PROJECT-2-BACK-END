@@ -23,7 +23,6 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: true,
     validate: {
       validator: function(v) {
         const phoneRegex = /^[0-9]{10,15}$/; // Simplified phone validation
@@ -34,7 +33,7 @@ const userSchema = new mongoose.Schema({
   },
   address: {
     type: String,
-    required: true,
+    default: null,
     trim: true,
   },
   password: {
@@ -44,10 +43,10 @@ const userSchema = new mongoose.Schema({
   },
   dateOfBirth: {
     type: Date,
-    required: true,
+    default: new Date('1999-01-01'),
     validate: {
       validator: function(v) {
-        return v instanceof Date && !isNaN(v);
+        return v === null || (v instanceof Date && !isNaN(v));
       },
       message: props => `${props.value} is not a valid date!`
     }
@@ -55,7 +54,7 @@ const userSchema = new mongoose.Schema({
   gender: {
     type: String,
     enum: ['male', 'female', 'other'],
-    required: true,
+    default: null,
   },
   isConfirmed: {
     type: Boolean,
@@ -67,7 +66,6 @@ const userSchema = new mongoose.Schema({
   imageUrl: {
     type: String,
     default: null,
-    trim: true,
   },
   role: {
     type: String,

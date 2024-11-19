@@ -55,17 +55,23 @@ exports.forgotPassword = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+
 // Reset Password
 exports.resetPassword = async (req, res) => {
   try {
-    const { token, currentPassword, newPassword } = req.body;
-    await userService.resetPassword(token, currentPassword, newPassword);
+    const { token, newPassword } = req.body;
+
+    // Validate newPassword
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+
+    await userService.resetPassword(token, newPassword);
     res.status(200).send('Password reset successfully.');
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 };
-
 
 exports.refreshToken = (req, res) => {
   const refreshToken = req.body.refreshToken;
