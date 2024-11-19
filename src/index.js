@@ -1,7 +1,7 @@
 const cluster = require('cluster');
 const os = require('os');
-const app = require('./app'); // Import the Express app
-// require('dotenv').config({path: "./../.env"});
+const app = require('./app');
+require('dotenv').config({ path: './../development/.env' });
 
 // Cluster setup to utilize multiple CPU cores
 if (cluster.isMaster) {
