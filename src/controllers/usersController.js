@@ -59,13 +59,13 @@ exports.forgotPassword = async (req, res) => {
 // Reset Password
 exports.resetPassword = async (req, res) => {
   try {
-    const { token, newPassword, confirmPassword } = req.body;
-    
-    // Check if newPassword and confirmPassword match
-    if (newPassword !== confirmPassword) {
-      return res.status(400).json({ error: 'Passwords do not match' });
+    const { token, newPassword } = req.body;
+
+    // Validate newPassword
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
     }
-    
+
     await userService.resetPassword(token, newPassword);
     res.status(200).send('Password reset successfully.');
   } catch (err) {
