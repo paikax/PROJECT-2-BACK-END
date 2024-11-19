@@ -23,7 +23,6 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: true,
     validate: {
       validator: function(v) {
         const phoneRegex = /^[0-9]{10,15}$/; // Simplified phone validation
@@ -34,7 +33,7 @@ const userSchema = new mongoose.Schema({
   },
   address: {
     type: String,
-    required: true,
+    default: null,
     trim: true,
   },
   password: {
@@ -44,7 +43,6 @@ const userSchema = new mongoose.Schema({
   },
   dateOfBirth: {
     type: Date,
-    required: true,
     validate: {
       validator: function(v) {
         return v instanceof Date && !isNaN(v);
@@ -67,7 +65,6 @@ const userSchema = new mongoose.Schema({
   imageUrl: {
     type: String,
     default: null,
-    trim: true,
   },
   role: {
     type: String,
