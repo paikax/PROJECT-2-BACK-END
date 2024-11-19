@@ -91,6 +91,7 @@ exports.loginUser = async (email, password) => {
             address: user.address,
             gender: user.gender,
             role: user.role,
+            imageUrl: user.imageUrl,
         },
         process.env.JWT_SECRET,
         { expiresIn: '15m' } // Short-lived token
