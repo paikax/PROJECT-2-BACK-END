@@ -43,9 +43,10 @@ const userSchema = new mongoose.Schema({
   },
   dateOfBirth: {
     type: Date,
+    default: new Date('1999-01-01'),
     validate: {
       validator: function(v) {
-        return v instanceof Date && !isNaN(v);
+        return v === null || (v instanceof Date && !isNaN(v));
       },
       message: props => `${props.value} is not a valid date!`
     }

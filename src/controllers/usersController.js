@@ -55,17 +55,23 @@ exports.forgotPassword = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+
 // Reset Password
 exports.resetPassword = async (req, res) => {
   try {
-    const { token, currentPassword, newPassword } = req.body;
-    await userService.resetPassword(token, currentPassword, newPassword);
+    const { token, newPassword, confirmPassword } = req.body;
+    
+    // Check if newPassword and confirmPassword match
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ error: 'Passwords do not match' });
+    }
+    
+    await userService.resetPassword(token, newPassword);
     res.status(200).send('Password reset successfully.');
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 };
-
 
 exports.refreshToken = (req, res) => {
   const refreshToken = req.body.refreshToken;
