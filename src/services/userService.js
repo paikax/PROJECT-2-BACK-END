@@ -80,14 +80,14 @@ exports.sendPasswordResetEmail = async (email) => {
   await emailService.sendPasswordResetEmail(email, resetUrl);
 };
 
-// Reset user password when forget
+// Reset user password when forgotten
 exports.resetPassword = async (token, newPassword) => {
   const user = await User.findOne({ confirmationToken: token });
   if (!user) throw new Error('Invalid or expired token.');
+
   if (newPassword.length < 6) {
     throw new Error('Password must be at least 6 characters long.');
   }
   user.password = newPassword;
-  user.confirmationToken = undefined;
   await user.save();
 };
