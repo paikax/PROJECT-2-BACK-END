@@ -2,8 +2,8 @@ const categoryService = require('../services/categoryService');
 
 exports.createCategory = async (req, res) => {
   try {
-    const { name, icon } = req.body; // Updated to include imageUrls
-    const category = await categoryService.createCategory(name, icon);
+    const { name, imageUrl } = req.body; // Updated to include imageUrls
+    const category = await categoryService.createCategory(name, imageUrl);
     res.status(201).json(category);
   } catch (err) {
     res.status(400).json({ error: err.message });
