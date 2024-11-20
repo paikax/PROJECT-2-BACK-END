@@ -30,7 +30,6 @@ router.get('/all',
     (req, res) => {
     res.json({message: 'all'});
 });
-
 // Get single user
 router.get('/user/:id', verifyToken, userController.getUser);
 // Update user
@@ -43,6 +42,14 @@ router.post('/user/forgot-password', userController.forgotPassword);
 router.post('/user/reset-password', userController.resetPassword);
 // Refresh token
 router.post('/refresh-token', userController.refreshToken);
+// ban user
+router.post(
+    '/admin/ban-user',
+    verifyToken,
+    authorizeRole("admin"),
+    userController.banUser
+  );
+  
 
 
 module.exports = router;

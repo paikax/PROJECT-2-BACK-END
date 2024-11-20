@@ -13,8 +13,6 @@ const verifyToken = (req, res, next) => {
 
         try {
             req.user = jwt.verify(token, process.env.JWT_SECRET);
-            console.log("The decoded user is: ", req.user);
-            console.log("The decoded user is: ", req.user.role);
             next();
         }catch(err) {
             res.status(401).json({message: 'Invalid token.'});

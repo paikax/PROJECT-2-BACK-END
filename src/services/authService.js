@@ -29,6 +29,9 @@ exports.registerUser = async (fullName, email, password, dateOfBirth, phone, add
     // Check if email is already registered
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+        if (existingUser.isBanned) {
+            throw new Error('This email is banned. You cannot sign up with this email.');
+        }
         throw new Error('Email is already registered.');
     }
     // Validate password strength
@@ -66,15 +69,15 @@ exports.loginUser = async (email, password) => {
 
     const user = await User.findOne({ email });
     if (!user) throw new Error('Invalid email or password.');
-
     if (!(await bcrypt.compare(password, user.password))) {
         throw new Error('Invalid email or password.');
     }
-
+    if (user.isBanned) {
+        throw new Error('Your account is banned. Please contact support.');
+    }
     if (!user.isConfirmed) {
         throw new Error('Please confirm your email first.');
     }
-
     // Generate tokens
     const accessToken = jwt.sign(
         {

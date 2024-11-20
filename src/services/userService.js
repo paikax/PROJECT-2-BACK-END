@@ -91,3 +91,18 @@ exports.resetPassword = async (token, newPassword) => {
   user.password = newPassword;
   await user.save();
 };
+
+exports.setBanStatus = async (userId, isBanned) => {
+  try {
+    const user = await User.findById(userId);
+    if (!user) throw new Error('User not found');
+    user.isBanned = isBanned;
+    await user.save();
+    return user;
+  } catch (err) {
+    throw new Error('Failed to update ban status: ' + err.message);
+  }
+};
+
+
+

@@ -73,6 +73,10 @@ const userSchema = new mongoose.Schema({
     enum: ['admin', 'user', 'seller'],
     default: 'user',
   },
+  isBanned: {
+    type: Boolean,
+    default: false,
+  },
 }, { timestamps: true });
 
 // Hash password before saving the user
