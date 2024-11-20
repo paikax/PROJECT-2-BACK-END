@@ -1,5 +1,5 @@
 const Product = require('../models/Product');
-
+const User = require('../models/User'); // Ensure User is imported
 exports.createProduct = async (name, description, price, imageUrls, variants, attributes, sellerId, categoryId, views = 0) => {
   const product = new Product({
     name,
@@ -64,3 +64,45 @@ exports.getProductsByStatus = async (status) => {
   
     return product;
   };
+
+  //report a product
+  exports.addProductReport = async (productId, userId, reason) => {
+    const product = await Product.findById(productId);
+    if (!product) throw new Error('Product not found');
+  
+    if (product.reports.some(report => report.user.toString() === userId)) {
+      throw new Error('You have already reported this product.');
+    }
+  
+    product.reports.push({ user: userId, reason });
+    await product.save();
+  
+    return product;
+  };
+
+// delete report by id
+exports.deleteReportById = async (reportId) => {
+  const product = await Product.findOne({ "reports._id": reportId });
+  if (!product) throw new Error('Report not found');
+
+  // Find the report to be deleted
+  const reportToDelete = product.reports.id(reportId);
+  if (!reportToDelete) throw new Error('Report not found');
+
+  // Get the user who reported the product
+  const userId = reportToDelete.user;
+
+  // Remove the report from the product's reports
+  product.reports = product.reports.filter(report => report._id.toString() !== reportId);
+  
+  // Decrement the report flag for the seller
+  const seller = await User.findById(product.seller);
+  if (seller) {
+    seller.reportFlags = Math.max(0, seller.reportFlags - 1); // Ensure it doesn't go below 0
+    await seller.save();
+  }
+
+  await product.save();
+  
+  return product;
+};

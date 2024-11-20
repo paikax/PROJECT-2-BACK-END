@@ -16,7 +16,8 @@ router.get('/products/:id', productController.getProduct); // get product by id
 router.get('/products', productController.getAllProducts); // Everyone can view products
 router.put('/products/:id', verifyToken, authorizeRole('seller'), productController.updateProduct);
 router.delete('/products/:id', verifyToken, authorizeRole('seller'), productController.deleteProduct);
-
+//report the product
+router.post('/products/report/:id', verifyToken, productController.reportProduct);
 //Verify product-related routes
 router.get('/products/status', verifyToken, authorizeRole('admin'), productController.getProductsByStatus);
 router.patch(

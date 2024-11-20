@@ -1,4 +1,5 @@
 const userService = require('../services/userService');
+const productService = require('../services/productService');
 const jwt = require('jsonwebtoken');
 
 // Get all users (for admin only, maybe add role checking in the future)
@@ -117,7 +118,24 @@ exports.banUser = async (req, res) => {
   }
 };
 
+exports.getUserReportFlags = async (req, res) => {
+  const userId = req.params.id; // Assuming the user ID is passed in the route
 
+  try {
+    const reportDetails = await userService.getUserReportFlags(userId);
+    res.status(200).json(reportDetails);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
 
+exports.deleteReportById = async (req, res) => {
+  const reportId = req.params.id; // Get report ID from URL
 
-
+  try {
+    const updatedProduct = await productService.deleteReportById(reportId);
+    res.status(200).json({ message: 'Report deleted successfully', product: updatedProduct });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};

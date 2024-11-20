@@ -49,7 +49,12 @@ router.post(
     authorizeRole("admin"),
     userController.banUser
   );
-  
-
-
+// show the report of that user
+router.get('/admin/report/:id', verifyToken, 
+    authorizeRole("admin"), 
+    userController.getUserReportFlags);
 module.exports = router;
+// delete report by id
+router.delete('/admin/report/:id', verifyToken, 
+    authorizeRole("admin"),
+    userController.deleteReportById);

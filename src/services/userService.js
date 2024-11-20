@@ -3,6 +3,7 @@ const emailService = require('./emailService');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const Product = require('../models/Product');
 
 exports.getAllUsers = async () => {
   try {
@@ -104,5 +105,23 @@ exports.setBanStatus = async (userId, isBanned) => {
   }
 };
 
+exports.getUserReportFlags = async (userId) => {
+  try {
+    const products = await Product.find({ seller: userId })
+      .populate('reports.user', 'fullName reason');
+    
+    const reportDetails = products.flatMap(product => 
+      product.reports.map(report => ({
+        reportId: report._id, 
+        productId: product._id,
+        productName: product.name,
+        reportedBy: report.user.fullName,
+        reason: report.reason,
+      }))
+    );
 
-
+    return reportDetails;
+  } catch (err) {
+    throw new Error('Failed to retrieve report flags: ' + err.message);
+  }
+};
