@@ -1,8 +1,19 @@
-const User = require('../models/User');
-const emailService = require('./emailService');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const Product = require('../models/Product');
+const Redis = require("ioredis");
+const User = require('../models/User');
+const emailService = require('./emailService');
+
+
+const redis = new Redis({
+  host: '127.0.0.1',  // Default Redis host
+  port: 6379,         // Default Redis port
+  // You can add authentication if needed:
+  // password: 'your-redis-password',
+  // db: 0,             // If you're using a specific Redis database
+});
 
 exports.getAllUsers = async () => {
   try {
@@ -80,31 +91,69 @@ exports.sendPasswordResetEmail = async (email) => {
   await emailService.sendPasswordResetEmail(email, resetUrl);
 };
 
-// reset user password when forget
-exports.resetPassword = async (token, currentPassword, newPassword) => {
+// Reset user password when forgotten
+exports.resetPassword = async (token, newPassword) => {
   const user = await User.findOne({ confirmationToken: token });
   if (!user) throw new Error('Invalid or expired token.');
-  if (!(await bcrypt.compare(currentPassword, user.password))) {
-    throw new Error('Current password is incorrect.');
-  }
+
   if (newPassword.length < 6) {
     throw new Error('Password must be at least 6 characters long.');
   }
   user.password = newPassword;
-  user.confirmationToken = undefined;
   await user.save();
 };
 
-exports.resetPassword = async (token, currentPassword, newPassword) => {
-  const user = await User.findOne({ confirmationToken: token });
-  if (!user) throw new Error('Invalid or expired token.');
-  if (!(await bcrypt.compare(currentPassword, user.password))) {
-    throw new Error('Current password is incorrect.');
+exports.setBanStatus = async (userId, isBanned) => {
+  try {
+    const user = await User.findById(userId);
+    if (!user) throw new Error('User not found');
+    user.isBanned = isBanned;
+    await user.save();
+    return user;
+  } catch (err) {
+    throw new Error('Failed to update ban status: ' + err.message);
   }
-  if (newPassword.length < 6) {
-    throw new Error('Password must be at least 6 characters long.');
+};
+
+exports.getUserReportFlags = async (userId) => {
+  try {
+    const products = await Product.find({ seller: userId })
+      .populate('reports.user', 'fullName reason');
+    
+    const reportDetails = products.flatMap(product => 
+      product.reports.map(report => ({
+        reportId: report._id, 
+        productId: product._id,
+        productName: product.name,
+        reportedBy: report.user.fullName,
+        reason: report.reason,
+      }))
+    );
+
+    return reportDetails;
+  } catch (err) {
+    throw new Error('Failed to retrieve report flags: ' + err.message);
   }
-  user.password = newPassword;
-  user.confirmationToken = undefined;
-  await user.save();
+};
+
+exports.blacklistToken = async (token) => {
+  try {
+    // Decode the token to determine expiration
+    const decoded = jwt.decode(token);
+    if (!decoded || !decoded.exp) {
+      throw new Error("Invalid token.");
+    }
+
+    // Calculate remaining time until token expiry
+    const expiresIn = decoded.exp - Math.floor(Date.now() / 1000); // Time in seconds
+
+    if (expiresIn <= 0) {
+      throw new Error("Token has already expired.");
+    }
+
+    // Add token to Redis with TTL
+    await redis.set(`blacklist:${token}`, true, "EX", expiresIn);
+  } catch (err) {
+    throw new Error("Failed to blacklist token: " + err.message);
+  }
 };

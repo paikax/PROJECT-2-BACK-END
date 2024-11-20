@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 
 exports.registerUser = async (fullName, email, password, dateOfBirth, phone, address, gender, role = 'user') => {
     // Validate the input fields
-    if (!fullName || !email || !password || !dateOfBirth || !gender || !phone || !address) {
+    if (!fullName || !email || !password ) {
         throw new Error('All fields are required.');
     }
     // Validate full name (at least 2 words and no special characters)
@@ -26,15 +26,12 @@ exports.registerUser = async (fullName, email, password, dateOfBirth, phone, add
     if (monthDifference < 0 || (monthDifference === 0 && new Date().getDate() < dob.getDate())) {
         age--;
     }
-    // Validate gender
-    if (!['male', 'female', 'other'].includes(gender)) {
-        throw new Error('Invalid gender. Must be one of "male", "female", or "other".');
-    }
-
-
     // Check if email is already registered
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+        if (existingUser.isBanned) {
+            throw new Error('This email is banned. You cannot sign up with this email.');
+        }
         throw new Error('Email is already registered.');
     }
     // Validate password strength
@@ -72,26 +69,39 @@ exports.loginUser = async (email, password) => {
 
     const user = await User.findOne({ email });
     if (!user) throw new Error('Invalid email or password.');
-
     if (!(await bcrypt.compare(password, user.password))) {
         throw new Error('Invalid email or password.');
     }
-
+    if (user.isBanned) {
+        throw new Error('Your account is banned. Please contact support.');
+    }
     if (!user.isConfirmed) {
         throw new Error('Please confirm your email first.');
     }
-
     // Generate tokens
     const accessToken = jwt.sign(
-        { id: user._id, role: user.role },
+        {
+            id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            phone: user.phone,
+            address: user.address,
+            gender: user.gender,
+            role: user.role,
+            imageUrl: user.imageUrl,
+        },
         process.env.JWT_SECRET,
-        { expiresIn: '15m' } // Short-lived
+        { expiresIn: '15m' } // Short-lived token
     );
 
     const refreshToken = jwt.sign(
-        { id: user._id },
+        {
+            id: user._id,
+            email: user.email,
+            role: user.role,
+        },
         process.env.REFRESH_TOKEN_SECRET,
-        { expiresIn: '3d' } // Long-lived
+        { expiresIn: '3d' } // Long-lived token
     );
     return { accessToken, refreshToken };
 };

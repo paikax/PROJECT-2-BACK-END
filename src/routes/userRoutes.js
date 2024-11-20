@@ -30,7 +30,6 @@ router.get('/all',
     (req, res) => {
     res.json({message: 'all'});
 });
-
 // Get single user
 router.get('/user/:id', verifyToken, userController.getUser);
 // Update user
@@ -43,6 +42,25 @@ router.post('/user/forgot-password', userController.forgotPassword);
 router.post('/user/reset-password', userController.resetPassword);
 // Refresh token
 router.post('/refresh-token', userController.refreshToken);
+// ban user
+router.post(
+    '/admin/ban-user',
+    verifyToken,
+    authorizeRole("admin"),
+    userController.banUser
+  );
+// show the report of that user
+router.get('/admin/report/:id', verifyToken, 
+    authorizeRole("admin"), 
+    userController.getUserReportFlags);
+    // delete report by id
 
+
+router.delete('/admin/report/:id', verifyToken, 
+        authorizeRole("admin"),
+        userController.deleteReportById);
+
+
+router.post('/user/logout', verifyToken, userController.logoutUser);    
 
 module.exports = router;
