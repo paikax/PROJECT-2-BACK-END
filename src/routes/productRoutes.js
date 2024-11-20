@@ -20,7 +20,7 @@ router.delete('/products/:id', verifyToken, authorizeRole('seller'), productCont
 //Verify product-related routes
 router.get('/products/status', verifyToken, authorizeRole('admin'), productController.getProductsByStatus);
 router.patch(
-    '/products/:id/verify',
+    '/products/verify/:id',
     verifyToken,
     authorizeRole('admin'),
     updateVerifyDescription, // Middleware cập nhật description
