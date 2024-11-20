@@ -2,6 +2,7 @@ const userService = require('../services/userService');
 const productService = require('../services/productService');
 const jwt = require('jsonwebtoken');
 
+
 // Get all users (for admin only, maybe add role checking in the future)
 exports.getAllUsers = async (req, res) => {
   try {
@@ -137,5 +138,22 @@ exports.deleteReportById = async (req, res) => {
     res.status(200).json({ message: 'Report deleted successfully', product: updatedProduct });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+};
+
+exports.logoutUser = async (req, res) => {
+  try {
+    const token = req.headers.Authorization || req.headers.authorization;
+    if (!token || !token.startsWith('Bearer ')) {
+      return res.status(400).json({ message: "Token is required for logout." });
+    }
+
+    const accessToken = token.split('Bearer ')[1];
+    // Delegate to service
+    await userService.blacklistToken(accessToken);
+
+    res.status(200).json({ message: 'User logged out successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to log out: " + err.message });
   }
 };

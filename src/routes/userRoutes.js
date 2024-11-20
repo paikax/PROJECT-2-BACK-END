@@ -53,8 +53,14 @@ router.post(
 router.get('/admin/report/:id', verifyToken, 
     authorizeRole("admin"), 
     userController.getUserReportFlags);
-module.exports = router;
-// delete report by id
+    // delete report by id
+
+
 router.delete('/admin/report/:id', verifyToken, 
-    authorizeRole("admin"),
-    userController.deleteReportById);
+        authorizeRole("admin"),
+        userController.deleteReportById);
+
+
+router.post('/user/logout', verifyToken, userController.logoutUser);    
+
+module.exports = router;
