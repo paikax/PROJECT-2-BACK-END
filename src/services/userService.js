@@ -2,18 +2,18 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Product = require('../models/Product');
-const Redis = require("ioredis");
+// const Redis = require("ioredis");
 const User = require('../models/User');
 const emailService = require('./emailService');
 
 
-const redis = new Redis({
-  host: '127.0.0.1',  // Default Redis host
-  port: 6379,         // Default Redis port
-  // You can add authentication if needed:
-  // password: 'your-redis-password',
-  // db: 0,             // If you're using a specific Redis database
-});
+// const redis = new Redis({
+//   host: '127.0.0.1',  // Default Redis host
+//   port: 6379,         // Default Redis port
+//   // You can add authentication if needed:
+//   // password: 'your-redis-password',
+//   // db: 0,             // If you're using a specific Redis database
+// });
 
 exports.getAllUsers = async () => {
   try {
