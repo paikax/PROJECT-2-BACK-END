@@ -1,7 +1,7 @@
-const Redis = require("ioredis");
+// const Redis = require("ioredis");
 const jwt = require("jsonwebtoken");
 
-const redis = new Redis();
+// const redis = new Redis();
 
 
 
