@@ -47,10 +47,11 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: true,
       },
-      value: {
+      value:[ {
         type: String,
         required: true,
       },
+    ]
     },
   ],
   rating: {
@@ -59,6 +60,28 @@ const productSchema = new mongoose.Schema({
     min: 0,
     max: 5,
   },
+  reports: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      reason: { type: String, required: true }
+    }
+  ],
+  verify: {
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
+    description: {
+      type: String,
+      default: 'This product is under review. Please wait...',
+    },
+    reason: {
+      type: String,
+    },
+  },
+  
+
   views: {
     type: Number,
     min: 0,
