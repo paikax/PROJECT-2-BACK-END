@@ -46,3 +46,21 @@ exports.deleteProduct = async (id) => {
   const product = await Product.findById(id);
   await product.remove();
 };
+
+//verify product
+exports.getProductsByStatus = async (status) => {
+    const query = status ? { 'verify.status': status } : {};
+    return await Product.find(query).populate('seller category');
+  };
+  
+  exports.updateProductVerify = async (id, status, reason, description) => {
+    const product = await Product.findById(id);
+    if (!product) throw new Error('Product not found');
+  
+    product.verify.status = status;
+    product.verify.reason = reason;
+    product.verify.description = description; // Sử dụng description từ middleware
+    await product.save();
+  
+    return product;
+  };
