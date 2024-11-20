@@ -46,3 +46,28 @@ exports.deleteProduct = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+// verify product
+exports.getProductsByStatus = async (req, res) => {
+    try {
+      const { status } = req.query;
+      const products = await productService.getProductsByStatus(status);
+      res.status(200).json(products);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  };
+  
+  exports.updateProductVerify = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status, reason, description } = req.body;
+  
+      const product = await productService.updateProductVerify(id, status, reason, description);
+      res.status(200).json(product);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  };
+  
+  
+  
