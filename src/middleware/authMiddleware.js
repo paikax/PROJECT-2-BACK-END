@@ -1,8 +1,5 @@
-// const Redis = require("ioredis");
 const jwt = require("jsonwebtoken");
-
-// const redis = new Redis();
-
+const tokenBlacklist = new Set();
 
 
 const verifyToken = async (req, res, next) => {
@@ -13,14 +10,12 @@ const verifyToken = async (req, res, next) => {
         if (!token) {
             return res.status(401).json({message: 'Authentication failed'});
         }
+        if (tokenBlacklist.has(token)) {
+            return res.status(401).json({ message: 'Token has been invalidated. Please log in again.' });
+        }
+
 
         try {
-            // Check if token is blacklisted
-            const isBlacklisted = await redis.get(`blacklist:${token}`);
-            if (isBlacklisted) {
-                return res.status(401).json({ message: 'Token has been revoked. Please log in again.' });
-            }
-
             req.user = jwt.verify(token, process.env.JWT_SECRET);
             next();
         }catch(err) {
@@ -32,6 +27,10 @@ const verifyToken = async (req, res, next) => {
 
 }
 
+const addToBlacklist = (token) => {
+    tokenBlacklist.add(token);
+};
+
 
 exports.checkRole = (roles) => (req, res, next) => {
     if (!roles.includes(req.user.role)) {
@@ -42,4 +41,4 @@ exports.checkRole = (roles) => (req, res, next) => {
 
 
 
-module.exports = verifyToken;
+module.exports = { verifyToken, addToBlacklist };

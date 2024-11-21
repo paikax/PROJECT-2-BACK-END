@@ -3,6 +3,8 @@ const os = require('os');
 const app = require('./app');
 require('dotenv').config({ path: './../development/.env' });
 
+
+
 // Cluster setup to utilize multiple CPU cores
 if (cluster.isMaster) {
   const numCPUs = os.cpus().length;

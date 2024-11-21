@@ -136,24 +136,3 @@ exports.getUserReportFlags = async (userId) => {
   }
 };
 
-exports.blacklistToken = async (token) => {
-  try {
-    // Decode the token to determine expiration
-    const decoded = jwt.decode(token);
-    if (!decoded || !decoded.exp) {
-      throw new Error("Invalid token.");
-    }
-
-    // Calculate remaining time until token expiry
-    const expiresIn = decoded.exp - Math.floor(Date.now() / 1000); // Time in seconds
-
-    if (expiresIn <= 0) {
-      throw new Error("Token has already expired.");
-    }
-
-    // Add token to Redis with TTL
-    await redis.set(`blacklist:${token}`, true, "EX", expiresIn);
-  } catch (err) {
-    throw new Error("Failed to blacklist token: " + err.message);
-  }
-};
