@@ -24,12 +24,13 @@ app.use(cors({
 }));
 app.use(rateLimiter);
 
+app.use('/api/auth', authRoutes); 
+app.use('/api/users', userRoutes); 
+app.use('/api/products', productRoutes); 
+app.use('/api/categories', categoryRoutes);
 app.use('/', (req, res) => {
     res.send("This is DEV-G5 root endpoint^^.");
-})
-app.use('/api', authRoutes);
-app.use('/api', userRoutes);
-app.use('/api', productRoutes);
-app.use('/api', categoryRoutes);
+});
+
 
 module.exports = app;
