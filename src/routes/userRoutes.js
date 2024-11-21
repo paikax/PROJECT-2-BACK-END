@@ -1,7 +1,7 @@
 const express = require('express');
 const userController = require('../controllers/usersController');
 const router = express.Router();
-const verifyToken = require('../middleware/authMiddleware');
+const {verifyToken, addToBlacklist} = require('../middleware/authMiddleware');
 const authorizeRole = require('../middleware/roleMiddleware');
 
 
@@ -61,6 +61,12 @@ router.delete('/admin/report/:id', verifyToken,
         userController.deleteReportById);
 
 
-router.post('/user/logout', verifyToken, userController.logoutUser);    
+
+router.post('/user/logout', verifyToken, (req, res) => {
+    const token = req.headers.authorization.split('Bearer ')[1];
+    addToBlacklist(token);
+    res.status(200).json({ message: 'Logout successful' });
+});        
+
 
 module.exports = router;
