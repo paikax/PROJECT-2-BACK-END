@@ -1,16 +1,16 @@
 {
-    "version": 2,
+    "version": 1,
     "builds": [
       {
-        "src": "node ./src/index.js",
+        "src": "./src/app.js",
         "use": "@vercel/node"
       }
     ],
     "routes": [
       {
         "src": "/(.*)",
-        "dest": "index.js"
+        "dest": "/src/app.js"
       }
     ]
   }
-  
+  // push len roi deploy lai thu di
