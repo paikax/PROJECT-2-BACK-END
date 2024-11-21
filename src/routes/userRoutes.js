@@ -13,33 +13,21 @@ router.get('/admin',
 });
 
 
-router.get('/users',
+router.get('/',
     verifyToken,
     authorizeRole("admin"),
     userController.getAllUsers);
 
-// Both admin and manager can access this router
-router.get('/seller', verifyToken, (req, res) => {
-    res.json({message: 'seller'});
-});
-
-// All can access this route
-router.get('/all',
-    verifyToken,
-    authorizeRole("admin", "seller", "user"),
-    (req, res) => {
-    res.json({message: 'all'});
-});
 // Get single user
-router.get('/user/:id', verifyToken, userController.getUser);
+router.get('/:id', verifyToken, userController.getUser);
 // Update user
-router.put('/user/:id', verifyToken, userController.updateUser);
+router.put('/:id', verifyToken, userController.updateUser);
 // Delete user
-router.delete('/user/:id', verifyToken, userController.deleteUser);
+router.delete('/:id', verifyToken, userController.deleteUser);
 // Request password reset
-router.post('/user/forgot-password', userController.forgotPassword);
+router.post('/forgot-password', userController.forgotPassword);
 // Reset password
-router.post('/user/reset-password', userController.resetPassword);
+router.post('/reset-password', userController.resetPassword);
 // Refresh token
 router.post('/refresh-token', userController.refreshToken);
 // ban user
@@ -62,7 +50,7 @@ router.delete('/admin/report/:id', verifyToken,
 
 
 
-router.post('/user/logout', verifyToken, (req, res) => {
+router.post('/logout', verifyToken, (req, res) => {
     const token = req.headers.authorization.split('Bearer ')[1];
     addToBlacklist(token);
     res.status(200).json({ message: 'Logout successful' });

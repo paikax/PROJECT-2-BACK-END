@@ -3,9 +3,9 @@ const authController = require('../controllers/authController');
 const checkBanStatus = require('../middleware/checkBanStatus');
 const router = express.Router();
 
-router.post('/auth/signup', authController.register);
+router.post('/signup', authController.register);
 // router.get('/auth/confirm/:token', authController.confirmEmail);
-router.post('/auth/confirm', authController.confirmEmail);
-router.post('/auth/signin', checkBanStatus, authController.login);
+router.post('/confirm', authController.confirmEmail);
+router.post('/signin', checkBanStatus, authController.login);
 
 module.exports = router;
