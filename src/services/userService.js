@@ -2,18 +2,18 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Product = require('../models/Product');
-const Redis = require("ioredis");
+const ProductReport = require('../models/ProductReport'); // Import ProductReport
 const User = require('../models/User');
 const emailService = require('./emailService');
 
 
-const redis = new Redis({
-  host: '127.0.0.1',  // Default Redis host
-  port: 6379,         // Default Redis port
-  // You can add authentication if needed:
-  // password: 'your-redis-password',
-  // db: 0,             // If you're using a specific Redis database
-});
+// const redis = new Redis({
+//   host: '127.0.0.1',  // Default Redis host
+//   port: 6379,         // Default Redis port
+//   // You can add authentication if needed:
+//   // password: 'your-redis-password',
+//   // db: 0,             // If you're using a specific Redis database
+// });
 
 exports.getAllUsers = async () => {
   try {
@@ -117,43 +117,20 @@ exports.setBanStatus = async (userId, isBanned) => {
 
 exports.getUserReportFlags = async (userId) => {
   try {
-    const products = await Product.find({ seller: userId })
-      .populate('reports.user', 'fullName reason');
-    
-    const reportDetails = products.flatMap(product => 
-      product.reports.map(report => ({
-        reportId: report._id, 
-        productId: product._id,
-        productName: product.name,
-        reportedBy: report.user.fullName,
-        reason: report.reason,
-      }))
-    );
+    const reports = await ProductReport.find({ user: userId })
+      .populate('product', 'name')
+      .populate('user', 'fullName');
+
+    const reportDetails = reports.map(report => ({
+      reportId: report._id,
+      productId: report.product._id,
+      productName: report.product.name,
+      reportedBy: report.user.fullName,
+      reason: report.reason,
+    }));
 
     return reportDetails;
   } catch (err) {
     throw new Error('Failed to retrieve report flags: ' + err.message);
-  }
-};
-
-exports.blacklistToken = async (token) => {
-  try {
-    // Decode the token to determine expiration
-    const decoded = jwt.decode(token);
-    if (!decoded || !decoded.exp) {
-      throw new Error("Invalid token.");
-    }
-
-    // Calculate remaining time until token expiry
-    const expiresIn = decoded.exp - Math.floor(Date.now() / 1000); // Time in seconds
-
-    if (expiresIn <= 0) {
-      throw new Error("Token has already expired.");
-    }
-
-    // Add token to Redis with TTL
-    await redis.set(`blacklist:${token}`, true, "EX", expiresIn);
-  } catch (err) {
-    throw new Error("Failed to blacklist token: " + err.message);
   }
 };

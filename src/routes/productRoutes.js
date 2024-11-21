@@ -1,6 +1,6 @@
 const express = require('express');
 const productController = require('../controllers/productController');
-const verifyToken = require('../middleware/authMiddleware');
+const {verifyToken} = require('../middleware/authMiddleware');
 const authorizeRole = require('../middleware/roleMiddleware');
 const { updateVerifyDescription } = require('../middleware/verifyMiddleware');
 
