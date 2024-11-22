@@ -1,11 +1,10 @@
-const express = require('express');
-const productController = require('../controllers/productController');
-const {verifyToken} = require('../middleware/authMiddleware');
-const authorizeRole = require('../middleware/roleMiddleware');
-const { updateVerifyDescription } = require('../middleware/verifyMiddleware');
+const express = require("express");
+const productController = require("../controllers/productController");
+const { verifyToken } = require("../middleware/authMiddleware");
+const authorizeRole = require("../middleware/roleMiddleware");
+const { updateVerifyDescription } = require("../middleware/verifyMiddleware");
 
 const router = express.Router();
-
 
 /**
  * @swagger
@@ -80,7 +79,7 @@ const router = express.Router();
  *                 type: string
  *                 description: ID of the category the product belongs to
  *                 example: 63cfb8a9e4b0e9a0f5a3e8d1
- *               branch:
+ *               branchId:
  *                 type: string
  *                 description: ID of the branch the product belongs to
  *                 example: 63cfb8a9e4b0e9a0f5a3e8d2
@@ -97,9 +96,9 @@ const router = express.Router();
  *         description: Bad request
  */
 router.post(
-  '/products',
+  "/products",
   verifyToken,
-  authorizeRole('seller'),  
+  authorizeRole("seller"),
   productController.createProduct
 );
 
@@ -121,7 +120,7 @@ router.post(
  *       400:
  *         description: Bad request
  */
-router.get('/products', productController.getAllProducts);
+router.get("/products", productController.getAllProducts);
 
 /**
  * @swagger
@@ -148,7 +147,7 @@ router.get('/products', productController.getAllProducts);
  *       404:
  *         description: Product not found
  */
-router.get('/products/:id', productController.getProduct);
+router.get("/products/:id", productController.getProduct);
 
 /**
  * @swagger
@@ -199,8 +198,12 @@ router.get('/products/:id', productController.getProduct);
  *       404:
  *         description: Product not found
  */
-router.put('/products/:id', verifyToken, authorizeRole('seller'), productController.updateProduct);
-
+router.put(
+  "/products/:id",
+  verifyToken,
+  authorizeRole("seller"),
+  productController.updateProduct
+);
 
 /**
  * @swagger
@@ -225,8 +228,12 @@ router.put('/products/:id', verifyToken, authorizeRole('seller'), productControl
  *       404:
  *         description: Product not found
  */
-router.delete('/products/:id', verifyToken, authorizeRole('seller'), productController.deleteProduct);
-
+router.delete(
+  "/products/:id",
+  verifyToken,
+  authorizeRole("seller"),
+  productController.deleteProduct
+);
 
 /**
  * @swagger
@@ -260,7 +267,11 @@ router.delete('/products/:id', verifyToken, authorizeRole('seller'), productCont
  *       400:
  *         description: Bad request
  */
-router.post('/report/products/:id', verifyToken, productController.reportProduct);
+router.post(
+  "/report/products/:id",
+  verifyToken,
+  productController.reportProduct
+);
 
 /**
  * @swagger
@@ -290,7 +301,12 @@ router.post('/report/products/:id', verifyToken, productController.reportProduct
  *       400:
  *         description: Bad request
  */
-router.get('/products/status', verifyToken, authorizeRole('admin'), productController.getProductsByStatus);
+router.get(
+  "/products/status",
+  verifyToken,
+  authorizeRole("admin"),
+  productController.getProductsByStatus
+);
 
 /**
  * @swagger
@@ -333,12 +349,11 @@ router.get('/products/status', verifyToken, authorizeRole('admin'), productContr
  *         description: Product not found
  */
 router.patch(
-    '/products/verify/:id',
-    verifyToken,
-    authorizeRole('admin'),
-    updateVerifyDescription, // Middleware cập nhật description
-    productController.updateProductVerify
+  "/products/verify/:id",
+  verifyToken,
+  authorizeRole("admin"),
+  updateVerifyDescription, // Middleware cập nhật description
+  productController.updateProductVerify
 );
-
 
 module.exports = router;
