@@ -13,7 +13,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `${process.env.SWAGGER_PATH || 'http://localhost:3000'}/api`,
+        url: `${process.env.SWAGGER_PATH || 'http://localhost:3000'}`,
         description: process.env.NODE_ENV === 'production' ? 'Production Server' : 'Development Server',
       },
     ],
