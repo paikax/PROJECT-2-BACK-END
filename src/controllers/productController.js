@@ -54,10 +54,10 @@ exports.updateProduct = async (req, res) => {
 
 exports.deleteProduct = async (req, res) => {
   try {
-    await productService.deleteProduct(req.params.id);
+    await productService.deleteProduct(req.params.id, req.user.id);
     res.status(200).json({ message: 'Product deleted successfully' });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(403).json({ error: err.message }); // Use 403 Forbidden if the user is not authorized
   }
 };
 
