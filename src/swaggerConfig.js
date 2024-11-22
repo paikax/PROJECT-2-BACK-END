@@ -13,7 +13,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `${process.env.SWAGGER_PATH || 'http://localhost:3000'}`,
+        url: `${process.env.SWAGGER_PATH || 'http://localhost:3000'}/api`,
         description: process.env.NODE_ENV === 'production' ? 'Production Server' : 'Development Server',
       },
     ],
@@ -32,7 +32,7 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: ['./routes/*.js'], // Path to the files where your routes are defined
+  apis: ['./src/routes/*.js'], // Path to the files where your routes are defined
 };
 
 const swaggerSpecs = swaggerJsdoc(swaggerOptions);
