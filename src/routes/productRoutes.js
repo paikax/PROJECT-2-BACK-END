@@ -91,14 +91,6 @@ const router = express.Router();
  *                     type: string
  *                     description: Detailed information about the product
  *                     example: "This smartphone is equipped with a 12MP camera."
- *                   specifications:
- *                     type: string
- *                     description: Specifications of the product
- *                     example: "RAM: 8GB, Storage: 128GB"
- *                   warranty:
- *                     type: string
- *                     description: Warranty details of the product
- *                     example: "1 year warranty."
  *     responses:
  *       201:
  *         description: Product created successfully

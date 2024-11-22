@@ -57,9 +57,19 @@ exports.updateProduct = async (id, updates) => {
   return product;
 };
 
-exports.deleteProduct = async (id) => {
+exports.deleteProduct = async (id, userId) => {
   const product = await Product.findById(id);
-  await product.remove();
+  if (!product) {
+    throw new Error('Product not found');
+  }
+
+  // Check if the authenticated user is the owner of the product
+  if (product.seller.toString() !== userId) {
+    throw new Error('You are not authorized to delete this product');
+  }
+
+  // Use deleteOne() or findByIdAndDelete() to delete the product
+  await Product.deleteOne({ _id: id });
 };
 
 // Verify product
