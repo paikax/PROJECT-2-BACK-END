@@ -1,28 +1,29 @@
-const swaggerJsdoc = require('swagger-jsdoc');
-require('dotenv').config('../development/.env');
-
-
+const swaggerJsdoc = require("swagger-jsdoc");
+require("dotenv").config("../development/.env");
 
 const swaggerOptions = {
   definition: {
-    openapi: '3.0.0',
+    openapi: "3.0.0",
     info: {
-      title: 'API Documentation', // Set your API title
-      version: '1.0.0', // Set your API version
-      description: 'API documentation for your project', // Add a description for your API
+      title: "API Documentation", // Set your API title
+      version: "1.0.0", // Set your API version
+      description: "API documentation for your project", // Add a description for your API
     },
     servers: [
       {
-        url: `${process.env.SWAGGER_PATH || 'http://localhost:3000'}/api`,
-        description: process.env.NODE_ENV === 'production' ? 'Production Server' : 'Development Server',
+        url: `${process.env.SWAGGER_PATH || "http://localhost:3000"}/api`,
+        description:
+          process.env.NODE_ENV === "production"
+            ? "Production Server"
+            : "Development Server",
       },
     ],
     components: {
       securitySchemes: {
         bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
         },
       },
     },
@@ -32,7 +33,11 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: ['./../src/Controller/*.js', './../src/models/*.js', './../src/routes/*.js'], // Path to the files where your routes are defined yet
+  apis: [
+    // "./../src/Controller/*.js",
+    // "./../src/models/*.js",
+    "./src/routes/*.js",
+  ], // Path to the files where your routes are defined yet
 };
 
 const swaggerSpecs = swaggerJsdoc(swaggerOptions);
