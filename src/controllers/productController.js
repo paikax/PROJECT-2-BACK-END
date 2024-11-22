@@ -4,8 +4,20 @@ const User = require('../models/User');
 
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, imageUrls, variants, attributes, views } = req.body;
-    const product = await productService.createProduct(name, description, price, imageUrls, variants, attributes, req.user.id, req.body.categoryId, views);
+    const { name, description, price, imageUrls, variants, attributes, views, branch, information } = req.body;
+    const product = await productService.createProduct(
+      name,
+      description,
+      price,
+      imageUrls,
+      variants,
+      attributes,
+      req.user.id,
+      req.body.categoryId,
+      views,
+      branch,
+      information
+    );
     res.status(201).json(product);
   } catch (err) {
     res.status(400).json({ error: err.message });

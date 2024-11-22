@@ -2,7 +2,8 @@ const Product = require('../models/Product');
 const ProductReport = require('../models/ProductReport'); // Import the new ProductReport model
 const User = require('../models/User');
 
-exports.createProduct = async (name, description, price, imageUrls, variants, attributes, sellerId, categoryId, views = 0) => {
+exports.createProduct = async (name,description,price,imageUrls,variants,attributes,sellerId,categoryId,views = 0,branch = null,information = null // Include information as an object
+) => {
   const product = new Product({
     name,
     description,
@@ -13,6 +14,8 @@ exports.createProduct = async (name, description, price, imageUrls, variants, at
     seller: sellerId,
     category: categoryId,
     views,
+    branch,
+    information, // Pass the information object here
   });
   await product.save();
   return product;
@@ -39,7 +42,17 @@ exports.getProductById = async (id) => {
 
 exports.updateProduct = async (id, updates) => {
   const product = await Product.findById(id);
+  if (!product) throw new Error('Product not found');
+  // Update each field
   Object.assign(product, updates);
+  // Update additionalData for variants if provided
+  if (updates.variants) {
+    product.variants = updates.variants.map((variant, index) => {
+      const existingVariant = product.variants[index] || {};
+      return { ...existingVariant, ...variant };
+    });
+  }
+
   await product.save();
   return product;
 };
