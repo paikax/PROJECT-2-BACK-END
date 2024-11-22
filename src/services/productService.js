@@ -2,7 +2,7 @@ const Product = require('../models/Product');
 const ProductReport = require('../models/ProductReport'); // Import the new ProductReport model
 const User = require('../models/User');
 
-exports.createProduct = async (name,description,price,imageUrls,variants,attributes,sellerId,categoryId,views = 0,branch = null,information = null // Include information as an object
+exports.createProduct = async (name,description,price,imageUrls,variants,attributes,sellerId,categoryId,views = 0,branchId,information = null
 ) => {
   const product = new Product({
     name,
@@ -14,21 +14,25 @@ exports.createProduct = async (name,description,price,imageUrls,variants,attribu
     seller: sellerId,
     category: categoryId,
     views,
-    branch,
-    information, // Pass the information object here
+    branch: branchId, // Map branchId to the branch field
+    information,
   });
   await product.save();
   return product;
 };
 
 exports.getAllProducts = async () => {
-  return await Product.find().populate('seller', 'fullName').populate('category', 'name');
+  return await Product.find()
+    .populate('seller', 'fullName')
+    .populate('category', 'name')
+    .populate('branch', 'name'); // Populate branch name
 };
 
 exports.getProductById = async (id) => {
   const product = await Product.findById(id)
     .populate('seller', 'fullName')
-    .populate('category', 'name');
+    .populate('category', 'name')
+    .populate('branch', 'name'); // Populate branch name
 
   if (!product) {
     throw new Error('Product not found');
@@ -43,8 +47,15 @@ exports.getProductById = async (id) => {
 exports.updateProduct = async (id, updates) => {
   const product = await Product.findById(id);
   if (!product) throw new Error('Product not found');
+
   // Update each field
   Object.assign(product, updates);
+
+  // Explicitly handle branchId update if provided
+  if (updates.branchId) {
+    product.branch = updates.branchId; // Map branchId to branch field
+  }
+
   // Update additionalData for variants if provided
   if (updates.variants) {
     product.variants = updates.variants.map((variant, index) => {
@@ -75,7 +86,10 @@ exports.deleteProduct = async (id, userId) => {
 // Verify product
 exports.getProductsByStatus = async (status) => {
   const query = status ? { 'verify.status': status } : {};
-  return await Product.find(query).populate('seller category');
+  return await Product.find(query)
+    .populate('seller', 'fullName')
+    .populate('category', 'name')
+    .populate('branch', 'name'); // Populate branch name
 };
 
 exports.updateProductVerify = async (id, status, reason, description) => {
