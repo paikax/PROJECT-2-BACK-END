@@ -44,7 +44,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs)); // Swagger
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', productRoutes);
-app.use('/api', categoryRoutes);
+app.use('/api', categoryRoutes); 
 app.use('/api', branchRoutes);
 
 app.use('/', (req, res) => {
