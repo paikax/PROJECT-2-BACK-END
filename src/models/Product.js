@@ -98,11 +98,6 @@ const productSchema = new mongoose.Schema({
     required: true,
   },
   information: {
-    // Define the information as an embedded subdocument
-    details: {
-      type: String,
-      required: true,
-    },
   },
 });
 
