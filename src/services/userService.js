@@ -134,3 +134,31 @@ exports.getUserReportFlags = async (userId) => {
     throw new Error('Failed to retrieve report flags: ' + err.message);
   }
 };
+
+// Update user password
+exports.updatePassword = async (userId, currentPassword, newPassword) => {
+  try {
+    // Fetch the user by ID
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('User not found.');
+    }
+
+    // Verify the current password
+    const isPasswordMatch = await user.comparePassword(currentPassword);
+    if (!isPasswordMatch) {
+      throw new Error('Current password is incorrect.');
+    }
+
+    // Validate the new password length
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error('New password must be at least 6 characters long.');
+    }
+
+    // Hash and update the password
+    user.password = newPassword;
+    await user.save(); // The password will be hashed by the pre('save') hook in the User model
+  } catch (err) {
+    throw new Error(err.message || 'Failed to update password.');
+  }
+};

@@ -39,6 +39,9 @@ const productSchema = new mongoose.Schema({
         required: true,
         min: 0,
       },
+      additionalData: {
+        type: String, // New field for additional data
+      },
     },
   ],
   attributes: [
@@ -88,6 +91,24 @@ const productSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
     required: true,
+  },
+  branch: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Branch',
+    required: true,
+  },
+  information: {
+    // Define the information as an embedded subdocument
+    details: {
+      type: String,
+      required: true,
+    },
+    specifications: {
+      type: String,
+    },
+    warranty: {
+      type: String,
+    },
   },
 });
 
