@@ -39,6 +39,10 @@ const productSchema = new mongoose.Schema({
         required: true,
         min: 0,
       },
+      additionalData: {
+        // New field for additional data
+        type: String,
+      },
     },
   ],
   attributes: [
@@ -88,6 +92,16 @@ const productSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
     required: true,
+  },
+  branch: {
+    // Reference to the Branch model
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Branch',
+    required: true, // Optional field
+  },
+  information: {
+    // New field for additional product information
+    type: String,
   },
 });
 
