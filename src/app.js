@@ -1,39 +1,46 @@
 const express = require('express');
 const compression = require('compression');
 const cors = require('cors');
-const authRoutes = require('./routes/authRoutes')
+const swaggerUi = require('swagger-ui-express'); // Import Swagger UI
+const swaggerSpecs = require('./swaggerConfig'); // Import Swagger Config
+const authRoutes = require('./routes/authRoutes');
 const rateLimiter = require('./middleware/rateLimiter');
-const userRoutes = require('./routes/userRoutes')
-const productRoutes = require('./routes/productRoutes')
+const userRoutes = require('./routes/userRoutes');
+const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
-const branchRoutes = require('./routes/branchRoutes')
+const branchRoutes = require('./routes/branchRoutes');
 require('./config/db');
-require('dotenv').config({ path: "./../development/.env"});
+require('dotenv').config({ path: "./../development/.env" });
 
 const app = express();
 
 app.use(express.json());
 app.use(compression());
 const allowedOrigins = [process.env.CLIENT_URL];
-app.use(cors({
+app.use(
+  cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) callback(null, true);
-        else callback(new Error('Not allowed by CORS'));
+      if (!origin || allowedOrigins.includes(origin)) callback(null, true);
+      else callback(new Error('Not allowed by CORS'));
     },
     methods: 'GET,POST,PUT,DELETE',
     credentials: true,
-}));
+  })
+);
+
 app.use(rateLimiter);
 
-app.use('/api/auth', authRoutes); 
-app.use('/api/users', userRoutes); 
-app.use('/api/products', productRoutes); 
+// Add Swagger UI route
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs)); // Swagger documentation route
+
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/branches', branchRoutes);
 
 app.use('/', (req, res) => {
-    res.send("This is DEV-G5 root endpoint^^.");
+  res.send('This is DEV-G5 root endpoint^^.');
 });
-
 
 module.exports = app;

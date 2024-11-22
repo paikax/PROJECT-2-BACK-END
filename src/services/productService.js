@@ -2,7 +2,8 @@ const Product = require('../models/Product');
 const ProductReport = require('../models/ProductReport'); // Import the new ProductReport model
 const User = require('../models/User');
 
-exports.createProduct = async (name, description, price, imageUrls, variants, attributes, sellerId, categoryId, views = 0, branch = null, information = null) => {
+exports.createProduct = async (name,description,price,imageUrls,variants,attributes,sellerId,categoryId,views = 0,branch = null,information = null // Include information as an object
+) => {
   const product = new Product({
     name,
     description,
@@ -14,7 +15,7 @@ exports.createProduct = async (name, description, price, imageUrls, variants, at
     category: categoryId,
     views,
     branch,
-    information,
+    information, // Pass the information object here
   });
   await product.save();
   return product;

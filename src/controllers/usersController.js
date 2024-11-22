@@ -26,14 +26,39 @@ exports.getUser = async (req, res) => {
   }
 };
 
-// Update user
+// Update user details, including password
 exports.updateUser = async (req, res) => {
-  const { password, dateOfBirth, phone, address, gender, imageUrl } = req.body;
+  const { currentPassword, newPassword, dateOfBirth, phone, address, gender, imageUrl } = req.body;
+
   try {
-    const updatedUser = await userService.updateUser(req.params.id, { password, dateOfBirth, phone, address, gender, imageUrl });
-    res.status(200).json({ message: 'User updated successfully', user: updatedUser });
+    // Get the authenticated user (assuming `req.user` is populated by middleware)
+    const userId = req.user.id;
+    const user = await userService.getUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // If password update is requested, delegate to a separate service
+    if (newPassword) {
+      await userService.updatePassword(userId, currentPassword, newPassword);
+    }
+
+    // Update other fields
+    const updatedFields = {
+      dateOfBirth: dateOfBirth || user.dateOfBirth,
+      phone: phone || user.phone,
+      address: address || user.address,
+      gender: gender || user.gender,
+      imageUrl: imageUrl || user.imageUrl,
+    };
+
+    Object.assign(user, updatedFields);
+    await user.save();
+
+    res.status(200).json({ message: 'User updated successfully', user });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
