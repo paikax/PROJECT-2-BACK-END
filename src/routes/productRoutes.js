@@ -6,14 +6,20 @@ const { updateVerifyDescription } = require('../middleware/verifyMiddleware');
 
 const router = express.Router();
 
+
+/**
+ * @swagger
+ * tags:
+ *   name: Products
+ *   description: API for managing products
+ */
+
 /**
  * @swagger
  * /products:
  *   post:
- *     summary: Create a product
- *     description: Create a new product. Only sellers can access this route.
- *     tags:
- *       - Products
+ *     summary: Create a new product
+ *     tags: [Products]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -25,18 +31,22 @@ const router = express.Router();
  *             properties:
  *               name:
  *                 type: string
- *                 example: Sample Product
+ *                 description: Name of the product
+ *                 example: Smartphone
  *               description:
  *                 type: string
- *                 example: This is a sample product description.
+ *                 description: Description of the product
+ *                 example: A high-quality smartphone with advanced features
  *               price:
  *                 type: number
- *                 example: 99.99
+ *                 description: Price of the product
+ *                 example: 999.99
  *               imageUrls:
  *                 type: array
  *                 items:
  *                   type: string
- *                 example: ["https://example.com/image1.jpg"]
+ *                 description: Array of image URLs for the product
+ *                 example: ["https://example.com/image1.jpg", "https://example.com/image2.jpg"]
  *               variants:
  *                 type: array
  *                 items:
@@ -44,44 +54,65 @@ const router = express.Router();
  *                   properties:
  *                     name:
  *                       type: string
- *                       example: Variant 1
+ *                       description: Name of the variant
+ *                       example: Color
  *                     stockQuantity:
  *                       type: number
- *                       example: 10
+ *                       description: Quantity in stock
+ *                       example: 100
  *               attributes:
  *                 type: array
+ *                 description: Array of attributes for the product
  *                 items:
  *                   type: object
  *                   properties:
  *                     name:
  *                       type: string
- *                       example: Color
+ *                       description: Name of the attribute
+ *                       example: Size
  *                     value:
  *                       type: array
  *                       items:
  *                         type: string
- *                       example: ["Red", "Blue"]
- *               seller:
+ *                       description: Values for the attribute
+ *                       example: ["Small", "Medium", "Large"]
+ *               categoryId:
  *                 type: string
- *                 example: 63f8d6f9b5e5b9e1bcd12345
- *               category:
- *                 type: string
- *                 example: 63f8d6f9b5e5b9e1bcd67890
+ *                 description: ID of the category the product belongs to
+ *                 example: 63cfb8a9e4b0e9a0f5a3e8d1
  *               branch:
  *                 type: string
- *                 example: 63f8d6f9b5e5b9e1bcd54321
+ *                 description: ID of the branch the product belongs to
+ *                 example: 63cfb8a9e4b0e9a0f5a3e8d2
+ *               information:
+ *                 type: object
+ *                 properties:
+ *                   details:
+ *                     type: string
+ *                     description: Detailed information about the product
+ *                     example: "This smartphone is equipped with a 12MP camera."
+ *                   specifications:
+ *                     type: string
+ *                     description: Specifications of the product
+ *                     example: "RAM: 8GB, Storage: 128GB"
+ *                   warranty:
+ *                     type: string
+ *                     description: Warranty details of the product
+ *                     example: "1 year warranty."
  *     responses:
  *       201:
  *         description: Product created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
  *       400:
- *         description: Invalid request
- *       401:
- *         description: Unauthorized
+ *         description: Bad request
  */
 router.post(
-  '/',
+  '/products',
   verifyToken,
-  authorizeRole('seller'),
+  authorizeRole('seller'),  
   productController.createProduct
 );
 
@@ -89,46 +120,233 @@ router.post(
  * @swagger
  * /products:
  *   get:
- *     summary: Get all products
- *     description: Retrieve a list of all products.
- *     tags:
- *       - Products
+ *     summary: Retrieve all products
+ *     tags: [Products]
  *     responses:
  *       200:
- *         description: Success
+ *         description: List of products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Bad request
  */
-router.get('/', productController.getAllProducts);
+router.get('/products', productController.getAllProducts);
 
 /**
  * @swagger
  * /products/{id}:
  *   get:
- *     summary: Get product by ID
- *     description: Retrieve a product by its ID.
- *     tags:
- *       - Products
+ *     summary: Retrieve a product by ID
+ *     tags: [Products]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
+ *         description: ID of the product to retrieve
  *         schema:
  *           type: string
- *         description: The product ID
  *     responses:
  *       200:
- *         description: Success
+ *         description: Product retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Bad request
  *       404:
  *         description: Product not found
  */
-router.get('/:id', productController.getProduct);
-router.put('/:id', verifyToken, authorizeRole('seller'), productController.updateProduct);
-router.delete('/:id', verifyToken, authorizeRole('seller'), productController.deleteProduct);
-//report the product
-router.post('/report/:id', verifyToken, productController.reportProduct);
-//Verify product-related routes
-router.get('/status', verifyToken, authorizeRole('admin'), productController.getProductsByStatus);
+router.get('/products/:id', productController.getProduct);
+
+/**
+ * @swagger
+ * /products/{id}:
+ *   put:
+ *     summary: Update a product by ID
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the product to update
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Updated name of the product
+ *                 example: Updated Smartphone
+ *               description:
+ *                 type: string
+ *                 description: Updated description of the product
+ *                 example: Updated description
+ *               price:
+ *                 type: number
+ *                 description: Updated price of the product
+ *                 example: 1099.99
+ *               categoryId:
+ *                 type: string
+ *                 description: Updated category ID
+ *     responses:
+ *       200:
+ *         description: Product updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Product not found
+ */
+router.put('/products/:id', verifyToken, authorizeRole('seller'), productController.updateProduct);
+
+
+/**
+ * @swagger
+ * /products/{id}:
+ *   delete:
+ *     summary: Delete a product
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the product to delete
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Product deleted successfully
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Product not found
+ */
+router.delete('/products/:id', verifyToken, authorizeRole('seller'), productController.deleteProduct);
+
+
+/**
+ * @swagger
+ * /report/products/{id}:
+ *   post:
+ *     summary: Report a product
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the product to report
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason:
+ *                 type: string
+ *                 description: Reason for reporting the product
+ *                 example: "Inappropriate content"
+ *     responses:
+ *       200:
+ *         description: Product reported successfully
+ *       400:
+ *         description: Bad request
+ */
+router.post('/report/products/:id', verifyToken, productController.reportProduct);
+
+/**
+ * @swagger
+ * /products/status:
+ *   get:
+ *     summary: Get products by status
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         required: false
+ *         description: Filter products by verification status
+ *         schema:
+ *           type: string
+ *           enum: [pending, approved, rejected]
+ *     responses:
+ *       200:
+ *         description: List of products filtered by status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Bad request
+ */
+router.get('/products/status', verifyToken, authorizeRole('admin'), productController.getProductsByStatus);
+
+/**
+ * @swagger
+ * /products/verify/{id}:
+ *   patch:
+ *     summary: Update product verification status
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the product to update verification for
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [pending, approved, rejected]
+ *                 description: Verification status
+ *               reason:
+ *                 type: string
+ *                 description: Reason for status
+ *               description:
+ *                 type: string
+ *                 description: A description for the verification status
+ *     responses:
+ *       200:
+ *         description: Product verification status updated successfully
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Product not found
+ */
 router.patch(
-    '/verify/:id',
+    '/products/verify/:id',
     verifyToken,
     authorizeRole('admin'),
     updateVerifyDescription, // Middleware cập nhật description
