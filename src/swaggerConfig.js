@@ -34,13 +34,11 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: isProduction
-    ? ["../src/Controller/*.js", "./src/models/*.js", "./src/routes/*.js"]
-    : [
-        "./../src/Controller/*.js",
-        "./../src/models/*.js",
-        "./../src/routes/*.js",
-      ],
+  apis: [
+    // "./../src/Controller/*.js",
+    // "./../src/models/*.js",
+    "./src/routes/*.js",
+  ], // Path to the files where your routes are defined yet
 };
 
 const swaggerSpecs = swaggerJsdoc(swaggerOptions);
