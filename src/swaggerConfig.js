@@ -1,5 +1,6 @@
 const swaggerJsdoc = require("swagger-jsdoc");
 require("dotenv").config("../development/.env");
+const isProduction = process.env.NODE_ENV === "production";
 
 const swaggerOptions = {
   definition: {
@@ -11,7 +12,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `${process.env.SWAGGER_PATH || "http://localhost:3000"}/api`,
+        url: `${process.env.SWAGGER_PATH || "http://localhost:3000"}`,
         description:
           process.env.NODE_ENV === "production"
             ? "Production Server"
@@ -33,11 +34,13 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: [
-    // "./../src/Controller/*.js",
-    // "./../src/models/*.js",
-    "./src/routes/*.js",
-  ], // Path to the files where your routes are defined yet
+  apis: isProduction
+    ? ["../src/Controller/*.js", "./src/models/*.js", "./src/routes/*.js"]
+    : [
+        "./../src/Controller/*.js",
+        "./../src/models/*.js",
+        "./../src/routes/*.js",
+      ],
 };
 
 const swaggerSpecs = swaggerJsdoc(swaggerOptions);
