@@ -37,8 +37,9 @@ const swaggerOptions = {
   apis: [
     // "./../src/Controller/*.js",
     // "./../src/models/*.js",
-    "./src/routes/*.js",
-  ], // Path to the files where your routes are defined yet
+    // "./../src/routes/*.js", // local test
+    "./src/routes/*.js", // deployment test
+  ],
 };
 
 const swaggerSpecs = swaggerJsdoc(swaggerOptions);
