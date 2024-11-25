@@ -22,12 +22,30 @@ exports.createProduct = async (req, res) => {
   }
 };
 
+// Get all products
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await productService.getAllProducts();
+    // Determine the user's role from the request object
+    const userRole = req.user ? req.user.role : "guest"; // Default to "guest" if no user is logged in
+
+    // Set query based on user role
+    let query = {};
+    if (userRole === "admin" || userRole === "seller") {
+      // Admins and sellers can see both approved and pending products
+      query = { 'verify.status': { $in: ['approved', 'pending'] } }; // Show both approved and pending
+    } else {
+      // Everyone else can only see approved products
+      query = { 'verify.status': 'approved' };
+    }
+
+    // Fetch products based on the query
+    const products = await productService.getAllProducts(query);
+
+    // Return the products to the client
     res.status(200).json(products);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    // Handle errors and return a meaningful message
+    res.status(500).json({ error: err.message });
   }
 };
 
