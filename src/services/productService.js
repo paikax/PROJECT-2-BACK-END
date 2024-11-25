@@ -22,7 +22,7 @@ exports.createProduct = async (name,description,price,imageUrls,variants,attribu
 };
 
 exports.getAllProducts = async () => {
-  return await Product.find()
+  return await Product.find({ "verify.status": "approved" }) // Filter to only approved products
     .populate('seller', 'fullName')
     .populate('category', 'name')
     .populate('brand', 'name'); // Populate brand name

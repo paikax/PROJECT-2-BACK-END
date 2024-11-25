@@ -106,11 +106,11 @@ router.post(
  * @swagger
  * /products:
  *   get:
- *     summary: Retrieve all products
+ *     summary: Retrieve all verified products
  *     tags: [Products]
  *     responses:
  *       200:
- *         description: List of products
+ *         description: List of verified products
  *         content:
  *           application/json:
  *             schema:
