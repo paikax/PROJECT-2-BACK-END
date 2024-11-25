@@ -79,9 +79,9 @@ const router = express.Router();
  *                 type: string
  *                 description: ID of the category the product belongs to
  *                 example: 63cfb8a9e4b0e9a0f5a3e8d1
- *               branchId:
+ *               brandId:
  *                 type: string
- *                 description: ID of the branch the product belongs to
+ *                 description: ID of the brand the product belongs to
  *                 example: 63cfb8a9e4b0e9a0f5a3e8d2
  *               information:
  *                 type: object
