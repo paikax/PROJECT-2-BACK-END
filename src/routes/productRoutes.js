@@ -120,7 +120,7 @@ router.post(
  *       400:
  *         description: Bad request
  */
-router.get("/products", productController.getAllProducts);
+router.get("/products", verifyToken, productController.getAllProducts);
 
 /**
  * @swagger

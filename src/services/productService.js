@@ -21,11 +21,15 @@ exports.createProduct = async (name,description,price,imageUrls,variants,attribu
   return product;
 };
 
-exports.getAllProducts = async () => {
-  return await Product.find({ "verify.status": "approved" }) // Filter to only approved products
-    .populate('seller', 'fullName')
-    .populate('category', 'name')
-    .populate('brand', 'name'); // Populate brand name
+exports.getAllProducts = async (query) => {
+  try {
+    return await Product.find(query)
+      .populate("seller", "fullName") // Populate seller details
+      .populate("category", "name") // Populate category details
+      .populate("brand", "name"); // Populate brand details
+  } catch (err) {
+    throw new Error("Failed to retrieve products");
+  }
 };
 
 exports.getProductById = async (id) => {
