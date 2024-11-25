@@ -25,6 +25,9 @@ const app = express();
 
 app.use(express.json());
 app.use(compression());
+// Test virtual view
+app.set("view engine", "ejs");
+
 // const allowedOrigins = [process.env.CLIENT_URL];
 app.use(
   cors({
@@ -49,8 +52,13 @@ app.use("/api", categoryRoutes);
 app.use("/api", brandRoutes);
 app.use("/api", cartRoutes);
 
+app.use("/payment", (req, res) => {
+  res.render('payment.ejs')
+});
+
 app.use("/", (req, res) => {
   res.send("This is DEV-G5 root endpoint^^.");
 });
+
 
 module.exports = app;
