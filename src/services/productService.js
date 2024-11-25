@@ -2,7 +2,7 @@ const Product = require('../models/Product');
 const ProductReport = require('../models/ProductReport'); // Import the new ProductReport model
 const User = require('../models/User');
 
-exports.createProduct = async (name,description,price,imageUrls,variants,attributes,sellerId,categoryId,views = 0,branchId,information = null
+exports.createProduct = async (name,description,price,imageUrls,variants,attributes,sellerId,categoryId,views = 0,brandId,information = null
 ) => {
   const product = new Product({
     name,
@@ -14,7 +14,7 @@ exports.createProduct = async (name,description,price,imageUrls,variants,attribu
     seller: sellerId,
     category: categoryId,
     views,
-    branch: branchId, // Map branchId to the branch field
+    brand: brandId, // Map brandId to the brand field
     information,
   });
   await product.save();
@@ -25,14 +25,14 @@ exports.getAllProducts = async () => {
   return await Product.find()
     .populate('seller', 'fullName')
     .populate('category', 'name')
-    .populate('branch', 'name'); // Populate branch name
+    .populate('brand', 'name'); // Populate brand name
 };
 
 exports.getProductById = async (id) => {
   const product = await Product.findById(id)
     .populate('seller', 'fullName')
     .populate('category', 'name')
-    .populate('branch', 'name'); // Populate branch name
+    .populate('brand', 'name'); // Populate brand name
 
   if (!product) {
     throw new Error('Product not found');
@@ -51,9 +51,9 @@ exports.updateProduct = async (id, updates) => {
   // Update each field
   Object.assign(product, updates);
 
-  // Explicitly handle branchId update if provided
-  if (updates.branchId) {
-    product.branch = updates.branchId; // Map branchId to branch field
+  // Explicitly handle brandId update if provided
+  if (updates.brandId) {
+    product.brand = updates.brandId; // Map brandId to brand field
   }
 
   // Update additionalData for variants if provided
@@ -89,7 +89,7 @@ exports.getProductsByStatus = async (status) => {
   return await Product.find(query)
     .populate('seller', 'fullName')
     .populate('category', 'name')
-    .populate('branch', 'name'); // Populate branch name
+    .populate('brand', 'name'); // Populate brand name
 };
 
 exports.updateProductVerify = async (id, status, reason, description) => {

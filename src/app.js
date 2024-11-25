@@ -8,7 +8,7 @@ const rateLimiter = require('./middleware/rateLimiter');
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
-const branchRoutes = require('./routes/branchRoutes');
+const brandRoutes = require('./routes/brandRoutes');
 require('./config/db');
 require('dotenv').config({ path: "./../development/.env" });
 
@@ -45,7 +45,7 @@ app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', productRoutes);
 app.use('/api', categoryRoutes); 
-app.use('/api', branchRoutes);
+app.use('/api', brandRoutes);
 
 app.use('/', (req, res) => {
   res.send('This is DEV-G5 root endpoint^^.');

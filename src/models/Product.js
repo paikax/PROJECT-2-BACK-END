@@ -92,9 +92,9 @@ const productSchema = new mongoose.Schema({
     ref: 'Category',
     required: true,
   },
-  branch: {
+  brand: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Branch',
+    ref: 'Brand',
     required: true,
   },
   information: {

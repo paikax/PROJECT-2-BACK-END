@@ -1,10 +1,8 @@
 const productService = require('../services/productService');
-const ProductReport = require('../models/ProductReport'); // Import ProductReport model
-const User = require('../models/User');
 
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, imageUrls, variants, attributes, views, branchId, information } = req.body;
+    const { name, description, price, imageUrls, variants, attributes, views, brandId, information } = req.body;
     const product = await productService.createProduct(
       name,
       description,
@@ -15,7 +13,7 @@ exports.createProduct = async (req, res) => {
       req.user.id,
       req.body.categoryId,
       views,
-      branchId, // Pass branchId to the service layer
+      brandId, // Pass brandId to the service layer
       information
     );
     res.status(201).json(product);
@@ -44,7 +42,7 @@ exports.getProduct = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   try {
-    const { name, description, price, imageUrls, variants, attributes, categoryId, branchId } = req.body;
+    const { name, description, price, imageUrls, variants, attributes, categoryId, brandId } = req.body;
     const product = await productService.updateProduct(req.params.id, { 
       name, 
       description, 
@@ -53,7 +51,7 @@ exports.updateProduct = async (req, res) => {
       variants, 
       attributes, 
       category: categoryId, 
-      branchId // Pass branchId to the service layer
+      brandId // Pass brandId to the service layer
     });
     res.status(200).json(product);
   } catch (err) {
