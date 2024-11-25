@@ -9,17 +9,17 @@ const router = express.Router();
 /**
  * @swagger
  * tags:
- *   name: brandes
- *   description: API for managing brandes
+ *   name: brands
+ *   description: API for managing brands
  */
 
 // Create a brand (only sellers and admins can create)
 /**
  * @swagger
- * /brandes:
+ * /brands:
  *   post:
  *     summary: Create a new brand
- *     tags: [brandes]
+ *     tags: [brands]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -54,20 +54,20 @@ const router = express.Router();
 router.post(
   '/brands',
   verifyToken,
-  authorizeRole('seller', 'admin'), // Only sellers and admins can create brandes
+  authorizeRole('seller', 'admin'), // Only sellers and admins can create brands
   brandController.createBrand
 );
 
-// Get all brandes (accessible to everyone)
+// Get all brands (accessible to everyone)
 /**
  * @swagger
- * /brandes:
+ * /brands:
  *   get:
- *     summary: Retrieve all brandes
- *     tags: [brandes]
+ *     summary: Retrieve all brands
+ *     tags: [brands]
  *     responses:
  *       200:
- *         description: List of all brandes
+ *         description: List of all brands
  *         content:
  *           application/json:
  *             schema:
@@ -82,10 +82,10 @@ router.get('/brands', brandController.getAllBrands);
 // Get single brand by ID (accessible to everyone)
 /**
  * @swagger
- * /brandes/{id}:
+ * /brands/{id}:
  *   get:
  *     summary: Retrieve a brand by ID
- *     tags: [brandes]
+ *     tags: [brands]
  *     parameters:
  *       - in: path
  *         name: id
@@ -110,10 +110,10 @@ router.get('/brands/:id', brandController.getBrandById);
 // Update a brand (only sellers and admins can update)
 /**
  * @swagger
- * /brandes/{id}:
+ * /brands/{id}:
  *   put:
  *     summary: Update a brand by ID
- *     tags: [brandes]
+ *     tags: [brands]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -157,17 +157,17 @@ router.get('/brands/:id', brandController.getBrandById);
 router.put(
   '/brands/:id',
   verifyToken,
-  authorizeRole('seller', 'admin'), // Only sellers and admins can update brandes
+  authorizeRole('seller', 'admin'), // Only sellers and admins can update brands
   brandController.updateBrand
 );
 
 // Delete a brand (only admins can delete)
 /**
  * @swagger
- * /brandes/{id}:
+ * /brands/{id}:
  *   delete:
  *     summary: Delete a brand by ID
- *     tags: [brandes]
+ *     tags: [brands]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -197,7 +197,7 @@ router.put(
 router.delete(
   '/brands/:id',
   verifyToken,
-  authorizeRole('seller','admin'), // Only admins can delete brandes
+  authorizeRole('seller','admin'), // Only admins can delete brands
   brandController.deleteBrand
 );
 
