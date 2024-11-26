@@ -88,26 +88,40 @@ exports.deleteProduct = async (req, res) => {
 
 // Verify product
 exports.getProductsByStatus = async (req, res) => {
-  try {
-    const { status } = req.query;
-    const products = await productService.getProductsByStatus(status);
-    res.status(200).json(products);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
-
-exports.updateProductVerify = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status, reason, description } = req.body;
-
-    const product = await productService.updateProductVerify(id, status, reason, description);
-    res.status(200).json(product);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
+    try {
+      const { status } = req.query;
+      const products = await productService.getProductsByStatus(status);
+      res.status(200).json(products);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  };
+  
+// requestProductVerify
+exports.requestProductVerify = async (req, res) => {
+    try {
+      const { productId } = req.params;
+      const userId = req.user._id; // Lấy userId từ middleware xác thực
+      const result = await requestService.createRequest(productId, userId);
+      res.status(201).json({ message: 'Verification request submitted', data: result });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+  
+  // updateProductVerify
+  exports.updateProductVerify = async (req, res) => {
+    try {
+      const { requestId } = req.params;
+      const { status, notes } = req.body;
+      const result = await requestService.updateRequestStatus(requestId, status, notes);
+      res.status(200).json({ message: 'Product verification request status updated', data: result });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+  
+  
 
 // Report product
 exports.reportProduct = async (req, res) => {

@@ -51,12 +51,8 @@ const router = express.Router();
  *       400:
  *         description: Bad request
  */
-router.post(
-  '/brands',
-  verifyToken,
-  authorizeRole('seller', 'admin'), // Only sellers and admins can create brands
-  brandController.createBrand
-);
+router.post('/brands', verifyToken, authorizeRole('seller', 'admin'), brandController.createBrand);
+
 
 // Get all brands (accessible to everyone)
 /**
@@ -154,12 +150,8 @@ router.get('/brands/:id', brandController.getBrandById);
  *       404:
  *         description: brand not found
  */
-router.put(
-  '/brands/:id',
-  verifyToken,
-  authorizeRole('seller', 'admin'), // Only sellers and admins can update brands
-  brandController.updateBrand
-);
+router.put('/brands/:id', verifyToken, authorizeRole('seller', 'admin'), brandController.updateBrand);
+
 
 // Delete a brand (only admins can delete)
 /**
@@ -194,11 +186,7 @@ router.put(
  *       404:
  *         description: brand not found
  */
-router.delete(
-  '/brands/:id',
-  verifyToken,
-  authorizeRole('seller','admin'), // Only admins can delete brands
-  brandController.deleteBrand
-);
+router.delete('/brands/:id', verifyToken, authorizeRole('admin'), brandController.deleteBrand);
+
 
 module.exports = router;

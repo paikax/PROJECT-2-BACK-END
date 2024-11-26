@@ -80,7 +80,7 @@ router.post('/auth/confirm', authController.confirmEmail);
  * /auth/signin:
  *   post:
  *     summary: Login an existing user
- *     description: Authenticates an existing user by email and password, returns a JWT token.
+ *     description: Authenticates an existing user by email and password, returns a JWT token. Only users with the 'seller' role are authorized to log in.
  *     tags:
  *       - Authentication
  *     requestBody:
@@ -98,8 +98,9 @@ router.post('/auth/confirm', authController.confirmEmail);
  *       200:
  *         description: Login successful, returns a JWT token
  *       400:
- *         description: Invalid credentials or other issues
+ *         description: Invalid credentials, unauthorized role, or other issues
  */
+
 router.post('/auth/signin', checkBanStatus, authController.login);
 
 module.exports = router;

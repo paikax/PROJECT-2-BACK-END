@@ -78,6 +78,12 @@ exports.loginUser = async (email, password) => {
     if (!user.isConfirmed) {
         throw new Error('Please confirm your email first.');
     }
+    
+    // Kiểm tra vai trò seller
+    if (user.role !== 'seller') {
+        throw new Error('You are not authorized to log in as a seller.');
+    }
+
     // Generate tokens
     const accessToken = jwt.sign(
         {

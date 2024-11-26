@@ -1,6 +1,6 @@
-const express = require("express");
-const cartController = require("../controllers/cartController");
-const { verifyToken } = require("../middleware/authMiddleware");
+const express = require('express');
+const cartController = require('../controllers/cartController');
+const { verifyToken } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -41,7 +41,8 @@ const router = express.Router();
  *       400:
  *         description: Bad request
  */
-router.get("/cart/", verifyToken, cartController.getCart);
+router.get('/cart/', verifyToken, cartController.getCart);
+
 
 /**
  * @swagger
@@ -99,7 +100,7 @@ router.get("/cart/", verifyToken, cartController.getCart);
  *       400:
  *         description: Bad request
  */
-router.post("/cart/add", verifyToken, cartController.addToCart);
+router.post('/cart/add', verifyToken, cartController.addToCart);
 
 /**
  * @swagger
@@ -153,7 +154,7 @@ router.post("/cart/add", verifyToken, cartController.addToCart);
  *       404:
  *         description: Product not found in the cart
  */
-router.delete("/cart/remove", verifyToken, cartController.removeFromCart);
+router.delete('/cart/remove', verifyToken, cartController.removeFromCart);
 
 /**
  * @swagger
@@ -213,7 +214,7 @@ router.delete("/cart/remove", verifyToken, cartController.removeFromCart);
  *       404:
  *         description: Product not found in the cart
  */
-router.patch("/cart/update", verifyToken, cartController.updateCartItem);
+router.patch('/cart/update', verifyToken, cartController.updateCartItem);
 
 /**
  * @swagger
@@ -238,6 +239,6 @@ router.patch("/cart/update", verifyToken, cartController.updateCartItem);
  *       400:
  *         description: Bad request
  */
-router.delete("/cart/clear", verifyToken, cartController.clearCart);
+router.delete('/cart/clear', verifyToken, cartController.clearCart);
 
 module.exports = router;

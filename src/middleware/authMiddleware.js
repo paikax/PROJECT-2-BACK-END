@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const User = require('../models/User');
 const tokenBlacklist = new Set();
 
 const verifyToken = async (req, res, next) => {
@@ -38,5 +39,17 @@ exports.checkRole = (roles) => (req, res, next) => {
     }
     next();
 };
+// Middleware kiểm tra vai trò
+const authorizeRole = (...roles) => {
+    return async (req, res, next) => {
+        const user = await User.findById(req.user.id); // Tìm user từ database
+        if (!roles.includes(user.role)) {
+            return res.status(403).json({ message: 'Forbidden: Insufficient role' });
+        }
+        next();
+    };
+};
+
+module.exports = { verifyToken, authorizeRole };
 
 module.exports = { verifyToken, addToBlacklist };
