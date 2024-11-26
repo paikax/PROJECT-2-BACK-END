@@ -1,9 +1,22 @@
 const Category = require('../models/Category');
+const Request = require('../models/Request');
+const User = require('../models/User');
 
 exports.createCategory = async (name, imageUrl) => {
   const category = new Category({ name, imageUrl });
   await category.save();
   return category;
+};
+
+exports.createCategoryRequest = async (requestData, user) => {
+    const request = new Request({
+      request_type: 'add_category', // Loại yêu cầu
+      user_id: user._id,
+      status: 'pending',
+      additional_info: { name: requestData.name, imageUrl: requestData.imageUrl },
+      created_at: new Date(),
+    });
+    return await request.save();
 };
 
 exports.getAllCategories = async () => {

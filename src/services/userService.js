@@ -5,7 +5,8 @@ const Product = require('../models/Product');
 const ProductReport = require('../models/ProductReport'); // Import ProductReport
 const User = require('../models/User');
 const emailService = require('./emailService');
-
+const Request = require('../models/Request');
+const requestService = require('./requestService');
 
 // const redis = new Redis({
 //   host: '127.0.0.1',  // Default Redis host

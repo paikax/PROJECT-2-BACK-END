@@ -96,17 +96,34 @@ exports.getProductsByStatus = async (status) => {
     .populate('brand', 'name'); // Populate brand name
 };
 
-exports.updateProductVerify = async (id, status, reason, description) => {
-  const product = await Product.findById(id);
-  if (!product) throw new Error('Product not found');
-
-  product.verify.status = status;
-  product.verify.reason = reason;
-  product.verify.description = description;
-  await product.save();
-
-  return product;
-};
+// Cập nhật trạng thái xác minh sản phẩm
+exports.updateProductVerify = async (requestId, status, reason, description) => {
+    const request = await requestService.getRequestById(requestId);
+    if (!request) throw new Error('Request not found');
+    if (request.request_type !== 'verify_product') {
+      throw new Error('Invalid request type');
+    }
+  
+    const productId = request.additional_info.productId;
+    const product = await Product.findById(productId);
+    if (!product) throw new Error('Product not found');
+  
+    if (status !== 'approved' && status !== 'rejected') {
+      throw new Error('Invalid status');
+    }
+  
+    // Cập nhật trạng thái verify của sản phẩm
+    product.verify.status = status;
+    product.verify.reason = reason || '';
+    product.verify.description = description || '';
+    await product.save();
+  
+    // Cập nhật trạng thái request
+    await requestService.updateRequestStatus(request._id, status, reason);
+  
+    return product;
+  };
+  
 
 // Report a product
 exports.addProductReport = async (productId, userId, reason) => {
