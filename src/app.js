@@ -10,6 +10,7 @@ const productRoutes = require("./routes/productRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const brandRoutes = require("./routes/brandRoutes");
 const cartRoutes = require("./routes/cartRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 require("./config/db");
 require("dotenv").config({ path: "./../development/.env" });
 
@@ -51,6 +52,7 @@ app.use("/api", productRoutes);
 app.use("/api", categoryRoutes);
 app.use("/api", brandRoutes);
 app.use("/api", cartRoutes);
+app.use("/api", orderRoutes);
 
 app.use("/payment", (req, res) => {
   res.render('payment.ejs')
