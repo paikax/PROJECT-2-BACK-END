@@ -1,11 +1,10 @@
 const stripe = require("../../config/stripe"); // Load Stripe with your secret key
 const Order = require("../models/Order");
 
+// paymentService.js
 exports.createCheckoutSession = async (userId, orderId) => {
-  // Fetch the order details from the database
-  const order = await Order.findOne({ _id: orderId }).populate(
-    "orderItems.productId"
-  );
+  // Fetch the order details
+  const order = await Order.findById(orderId).populate("orderItems.productId");
 
   if (!order) {
     throw new Error("Order not found");
@@ -14,53 +13,29 @@ exports.createCheckoutSession = async (userId, orderId) => {
   // Prepare Stripe line items from the order
   const lineItems = order.orderItems.map((item) => ({
     price_data: {
-      currency: "usd",
+      currency: "vnd", // Currency in VND
       product_data: {
-        name: item.productId.name, // Product name
-        images: [item.productId.imageUrls[0]], // Use the first image (optional)
-        metadata: {
-          variantId: item.variantId.toString() || "N/A",
-        },
+        name: item.productId.name,
+        images: [item.productId.imageUrls?.[0] || "default-image-url"], // Fallback for image URL
       },
-      unit_amount: Math.round(item.price * 100), // Convert price to cents
+      unit_amount: Math.round(parseFloat(item.price) || 0), // Amount in VND
     },
-    quantity: item.quantity,
+    quantity: Math.max(1, parseInt(item.quantity) || 1), // Default quantity to 1 if invalid
   }));
 
   // Create Stripe Checkout session
   const session = await stripe.checkout.sessions.create({
-    payment_method_types: ["card"], // Allow card payments
+    payment_method_types: ["card"],
     mode: "payment",
-    // customer_email: order.user.email, // Use the user's email associated with the order
+    // customer_email: order.user.email,
     line_items: lineItems,
     success_url: `${process.env.CLIENT_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`, // Redirect on success
     cancel_url: `${process.env.CLIENT_URL}/payment-failed`, // Redirect on failure
     metadata: {
-      orderId: orderId,
-      userId: userId,
+      orderId: String(orderId), // Convert orderId to a string
+      userId: String(userId), // Convert userId to a string, if necessary
     },
   });
 
-  return session.url; // Return the Stripe Checkout session URL
-};
-
-// Handle Stripe Webhook
-exports.handleWebhook = async (event) => {
-  switch (event.type) {
-    case "checkout.session.completed": {
-      const session = event.data.object;
-
-      // Update the order status to "Paid" in the database
-      const orderId = session.metadata.orderId;
-      await Order.findByIdAndUpdate(orderId, {
-        paymentStatus: "Paid",
-        status: "Processing", // Optionally update the order status as well
-      });
-
-      console.log(`Order ${orderId} has been marked as Paid.`);
-      break;
-    }
-    default:
-      console.log(`Unhandled event type ${event.type}`);
-  }
+  return session.url; // Return Stripe Checkout session URL
 };
