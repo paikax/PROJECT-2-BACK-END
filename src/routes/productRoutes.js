@@ -2,6 +2,7 @@ const express = require("express");
 const productController = require("../controllers/productController");
 const { verifyToken } = require("../middleware/authMiddleware");
 const authorizeRole = require("../middleware/roleMiddleware");
+const { updateVerifyDescription } = require("../middleware/verifyMiddleware");
 const {filterByRole} = require("../middleware/filterMiddleware");
 const {filterProduct} = require("../middleware/filterMiddleware");
 const router = express.Router();
@@ -118,7 +119,7 @@ router.post(
  *       400:
  *         description: Bad request
  */
-router.get("/products", verifyToken, filterByRole, filterProduct, productController.getAllProducts);
+router.get("/products", verifyToken, filterByRole, filterProduct,  productController.getAllProducts);
 
 // Retrieve a Product by ID
 /**
