@@ -1,8 +1,13 @@
 const express = require("express");
+const Order = require("../models/Order"); // Import the Order model
 const cartController = require("../controllers/cartController");
 const { verifyToken } = require("../middleware/authMiddleware");
-
+const moment = require("moment");
+const config = require("config");
+const querystring = require("querystring");
+const crypto = require("crypto"); // Import crypto module
 const router = express.Router();
+const cartService = require("../services/cartService");
 
 /**
  * @swagger
@@ -174,5 +179,166 @@ router.patch("/cart/update", verifyToken, cartController.updateCartItem);
  *         description: Bad request
  */
 router.delete("/cart/clear", verifyToken, cartController.clearCart);
+
+router.post(
+  "/create_payment_url",
+  verifyToken,
+  async function (req, res, next) {
+    process.env.TZ = "Asia/Ho_Chi_Minh";
+
+    let date = new Date();
+    let createDate = moment(date).format("YYYYMMDDHHmmss");
+
+    let ipAddr =
+      req.headers["x-forwarded-for"] ||
+      req.connection.remoteAddress ||
+      req.socket.remoteAddress ||
+      req.connection.socket.remoteAddress;
+
+    const userId = req.user.id;
+
+    const { deliveryAddress } = req.body;
+    if (!deliveryAddress) {
+      return res.status(400).json({ error: "Delivery address is required." });
+    }
+
+    // Fetch the user's shopping cart
+    const cart = await cartService.getCart(userId);
+    if (!cart || cart.items.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "Cart is empty. Cannot place an order." });
+    }
+
+    // Calculate total price
+    const totalPrice = Math.round(
+      cart.items.reduce((sum, item) => sum + item.count * item.product.price, 0)
+    );
+
+    let tmnCode = config.get("vnp_TmnCode");
+    let secretKey = config.get("vnp_HashSecret");
+    let vnpUrl = config.get("vnp_Url");
+    let returnUrl = config.get("vnp_ReturnUrl");
+    let orderId = moment(date).format("DDHHmmss");
+
+    let amount = totalPrice;
+    let bankCode = req.body.bankCode;
+
+    let locale = req.body.language;
+    if (locale === null || locale === "") {
+      locale = "vn";
+    }
+    let currCode = "VND";
+    let vnp_Params = {};
+    vnp_Params["vnp_Version"] = "2.1.0";
+    vnp_Params["vnp_Command"] = "pay";
+    vnp_Params["vnp_TmnCode"] = tmnCode;
+    vnp_Params["vnp_Locale"] = locale;
+    vnp_Params["vnp_CurrCode"] = currCode;
+    vnp_Params["vnp_TxnRef"] = orderId;
+    vnp_Params["vnp_OrderInfo"] = "Thanh toan cho ma GD:" + orderId;
+    vnp_Params["vnp_OrderType"] = "other";
+    vnp_Params["vnp_Amount"] = amount * 100;
+    vnp_Params["vnp_ReturnUrl"] = returnUrl;
+    vnp_Params["vnp_IpAddr"] = ipAddr;
+    vnp_Params["vnp_CreateDate"] = createDate;
+
+    if (bankCode !== null && bankCode !== "") {
+      vnp_Params["vnp_BankCode"] = bankCode;
+    }
+
+    vnp_Params = sortObject(vnp_Params);
+
+    let querystring = require("qs");
+    let signData = querystring.stringify(vnp_Params, { encode: false });
+    let crypto = require("crypto");
+    let hmac = crypto.createHmac("sha512", secretKey);
+    let signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
+    vnp_Params["vnp_SecureHash"] = signed;
+    vnpUrl += "?" + querystring.stringify(vnp_Params, { encode: false });
+
+    return res.status(200).json({
+      vnpUrl,
+    });
+  }
+);
+
+router.get("/vnpay_return", verifyToken, async function (req, res, next) {
+    let vnp_Params = req.query;
+    let secureHash = vnp_Params["vnp_SecureHash"];
+  
+    delete vnp_Params["vnp_SecureHash"];
+    delete vnp_Params["vnp_SecureHashType"];
+  
+    vnp_Params = sortObject(vnp_Params);
+    
+    let config = require("config");
+    let tmnCode = config.get("vnp_TmnCode");
+    let secretKey = config.get("vnp_HashSecret");
+  
+    let querystring = require("qs");
+    let signData = querystring.stringify(vnp_Params, { encode: false });
+    let crypto = require("crypto");
+    let hmac = crypto.createHmac("sha512", secretKey);
+    let signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
+  
+    if (secureHash === signed) {
+      const userId = req.user.id; // Safely access user ID
+      const cart = await cartService.getCart(userId);
+  
+      if (cart && cart.items.length > 0) {
+        const totalAmount = Math.round(
+          cart.items.reduce((sum, item) => sum + item.count * item.product.price, 0)
+        );
+  
+        const order = new Order({
+          user: userId,
+          items: cart.items,
+          totalAmount,
+          deliveryAddress: cart.deliveryAddress || "Default Address", // Adjust as needed
+          status: "Pending", // Set initial status
+        });
+  
+        await order.save();
+        await cartService.clearCart(userId); // Clear the cart after creating the order
+  
+        // Send order details as a JSON response
+        return res.status(200).json({
+          message: "Payment successful",
+          order: {
+            id: order._id,
+            totalAmount: order.totalAmount,
+            deliveryAddress: order.deliveryAddress,
+            status: order.status,
+            items: order.items.map(item => ({
+              product: item.product,
+              variantId: item.variantId,
+              count: item.count,
+            })),
+          },
+        });
+      } else {
+        return res.status(400).json({ error: "Cart is empty" });
+      }
+    } else {
+      return res.status(400).json({ error: "Invalid signature" });
+    }
+  });
+
+function sortObject(obj) {
+  let sorted = {};
+  let str = [];
+  let key;
+  for (key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      str.push(encodeURIComponent(key));
+    }
+  }
+  str.sort();
+  for (key = 0; key < str.length; key++) {
+    sorted[str[key]] = encodeURIComponent(obj[str[key]]).replace(/%20/g, "+");
+  }
+  return sorted;
+}
 
 module.exports = router;

@@ -23,9 +23,10 @@ const shoppingCartSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true, // Ensure one cart per user
+      unique: true,
     },
-    items: [cartItemSchema], // Array of cart items
+    items: [cartItemSchema],
+    deliveryAddress: { type: String}, // New field
   },
   { timestamps: true }
 );
