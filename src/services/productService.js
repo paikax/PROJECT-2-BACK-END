@@ -1,22 +1,34 @@
-const Product = require('../models/Product');
-const ProductReport = require('../models/ProductReport'); // Import the new ProductReport model
-const User = require('../models/User');
+const Product = require("../models/Product");
+const ProductReport = require("../models/ProductReport"); // Import the new ProductReport model
+const User = require("../models/User");
 
-exports.createProduct = async (name,description,price,imageUrls,variants,attributes,sellerId,categoryId,views = 0,brandId,information = null
-) => {
+exports.createProduct = async ({
+  sellerId,
+  name,
+  price,
+  descriptionFileUrl,
+  information,
+  imageUrls,
+  variants,
+  attributes,
+  categoryId,
+  views = 0,
+  brandId,
+}) => {
   const product = new Product({
+    sellerId,
     name,
-    description,
     price,
+    descriptionFileUrl,
+    information,
     imageUrls,
     variants,
     attributes,
-    seller: sellerId,
-    category: categoryId,
+    categoryId,
     views,
-    brand: brandId, // Map brandId to the brand field
-    information,
+    brandId,
   });
+
   await product.save();
   return product;
 };
@@ -24,43 +36,45 @@ exports.createProduct = async (name,description,price,imageUrls,variants,attribu
 exports.getAllProducts = async (query) => {
   try {
     return await Product.find(query)
-      .populate("seller", "fullName") // Populate seller details
-      .populate("category", "name") // Populate category details
-      .populate("brand", "name"); // Populate brand details
+      .populate("sellerId", "fullName") // Populate seller details
+      .populate("categoryId", "name") // Populate category details
+      .populate("brandId", "name"); // Populate brand details
   } catch (err) {
     throw new Error("Failed to retrieve products");
   }
 };
 
+// Get Product by ID
 exports.getProductById = async (id) => {
   const product = await Product.findById(id)
-    .populate('seller', 'fullName')
-    .populate('category', 'name')
-    .populate('brand', 'name'); // Populate brand name
+    .populate("sellerId", "fullName")
+    .populate("categoryId", "name")
+    .populate("brandId", "name"); // Populate brand details
 
   if (!product) {
-    throw new Error('Product not found');
+    throw new Error("Product not found");
   }
 
-  // Increment views every time this product is accessed
-  product.views += 1;
+  // Increment views count
+  product.views = (product.views || 0) + 1;
   await product.save();
   return product;
 };
 
+// Update a Product
 exports.updateProduct = async (id, updates) => {
   const product = await Product.findById(id);
-  if (!product) throw new Error('Product not found');
+  if (!product) throw new Error("Product not found");
 
-  // Update each field
+  // Update all fields dynamically
   Object.assign(product, updates);
 
-  // Explicitly handle brandId update if provided
+  // Update brandId explicitly if provided
   if (updates.brandId) {
-    product.brand = updates.brandId; // Map brandId to brand field
+    product.brandId = updates.brandId;
   }
 
-  // Update additionalData for variants if provided
+  // Update variants if provided
   if (updates.variants) {
     product.variants = updates.variants.map((variant, index) => {
       const existingVariant = product.variants[index] || {};
@@ -72,94 +86,85 @@ exports.updateProduct = async (id, updates) => {
   return product;
 };
 
+// Delete a Product
 exports.deleteProduct = async (id, userId) => {
   const product = await Product.findById(id);
   if (!product) {
-    throw new Error('Product not found');
+    throw new Error("Product not found");
   }
 
-  // Check if the authenticated user is the owner of the product
-  if (product.seller.toString() !== userId) {
-    throw new Error('You are not authorized to delete this product');
+  // Verify if the user is the owner
+  if (product.sellerId.toString() !== userId) {
+    throw new Error("You are not authorized to delete this product");
   }
 
-  // Use deleteOne() or findByIdAndDelete() to delete the product
-  await Product.deleteOne({ _id: id });
+  await product.deleteOne();
 };
 
-// Verify product
+// Get Products by Verification Status
 exports.getProductsByStatus = async (status) => {
-  const query = status ? { 'verify.status': status } : {};
+  const query = status ? { "verify.status": status } : {};
   return await Product.find(query)
-    .populate('seller', 'fullName')
-    .populate('category', 'name')
-    .populate('brand', 'name'); // Populate brand name
+    .populate("sellerId", "fullName")
+    .populate("categoryId", "name")
+    .populate("brandId", "name");
 };
 
-// Cập nhật trạng thái xác minh sản phẩm
-exports.updateProductVerify = async (requestId, status, reason, description) => {
-    const request = await requestService.getRequestById(requestId);
-    if (!request) throw new Error('Request not found');
-    if (request.request_type !== 'verify_product') {
-      throw new Error('Invalid request type');
-    }
-  
-    const productId = request.additional_info.productId;
-    const product = await Product.findById(productId);
-    if (!product) throw new Error('Product not found');
-  
-    if (status !== 'approved' && status !== 'rejected') {
-      throw new Error('Invalid status');
-    }
-  
-    // Cập nhật trạng thái verify của sản phẩm
-    product.verify.status = status;
-    product.verify.reason = reason || '';
-    product.verify.description = description || '';
-    await product.save();
-  
-    // Cập nhật trạng thái request
-    await requestService.updateRequestStatus(request._id, status, reason);
-  
-    return product;
-  };
-  
+// Update Product Verification
+exports.updateProductVerify = async (id, { status, reason, description }) => {
+  const product = await Product.findById(id);
+  if (!product) throw new Error("Product not found");
 
-// Report a product
+  product.verify.status = status;
+  product.verify.reason = reason || product.verify.reason;
+  product.verify.description = description || product.verify.description;
+
+  await product.save();
+  return product;
+};
+
+// Add Product Report
 exports.addProductReport = async (productId, userId, reason) => {
   const product = await Product.findById(productId);
-  if (!product) throw new Error('Product not found');
+  if (!product) throw new Error("Product not found");
 
-  const existingReport = await ProductReport.findOne({ product: productId, user: userId });
+  const existingReport = await ProductReport.findOne({
+    product: productId,
+    user: userId,
+  });
   if (existingReport) {
-    throw new Error('You have already reported this product.');
+    throw new Error("You have already reported this product.");
   }
 
-  const report = new ProductReport({ product: productId, user: userId, reason });
+  const report = new ProductReport({
+    product: productId,
+    user: userId,
+    reason,
+  });
   await report.save();
 
-  // Increment report flag for the seller
-  const seller = await User.findById(product.seller);
+  // Increment seller's report flags
+  const seller = await User.findById(product.sellerId);
   if (seller) {
-    seller.reportFlags += 1;
+    seller.reportFlags = (seller.reportFlags || 0) + 1;
     await seller.save();
   }
 
   return report;
 };
 
-// Delete report by ID
+// Delete Product Report by ID
 exports.deleteReportById = async (reportId) => {
-  const report = await ProductReport.findById(reportId).populate('product');
-  if (!report) throw new Error('Report not found');
+  const report = await ProductReport.findById(reportId).populate("product");
+  if (!report) throw new Error("Report not found");
 
   const product = report.product;
-  if (!product) throw new Error('Product not found for this report');
+  if (!product) throw new Error("Product not found for this report");
 
-  // Decrement the report flag for the seller
-  const seller = await User.findById(product.seller);
+  // Decrement seller's report flags
+  const seller = await User.findById(product.sellerId);
   if (seller) {
-    seller.reportFlags = Math.max(0, seller.reportFlags - 1);
+    seller.reportFlags = Math.max(0, (seller.reportFlags || 0) - 1);
     await seller.save();
   }
 

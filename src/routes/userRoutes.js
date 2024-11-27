@@ -5,12 +5,13 @@ const authorizeRole = require('../middleware/roleMiddleware');
 
 const router = express.Router();
 
-// User CRUD routes
+// Routes for User Management
 router.get('/admin', verifyToken, authorizeRole('admin'), userController.getAllUsers);
 router.get('/:id', verifyToken, userController.getUser);
 router.put('/:id', verifyToken, userController.updateUser);
 router.delete('/:id', verifyToken, userController.deleteUser);
 
-// Request and verify routes for User
-router.post('/request', verifyToken, requestController.createRequest);  // Create request for user
+// Request routes for users
+router.post('/request', verifyToken, requestController.createRequest);
+
 module.exports = router;
