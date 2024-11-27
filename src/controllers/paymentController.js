@@ -28,8 +28,7 @@ exports.stripeWebhook = async (req, res) => {
     event = stripe.webhooks.constructEvent(
       req.body, // Raw body parsed by express.raw
       sig,
-      // process.env.STRIPE_WEBHOOK_SECRET
-      "whsec_e941b3c6db04d75e08c90e7c609b1fa5110d765f90a7b6ebe9af0954f9976dad"
+      process.env.STRIPE_WEBHOOK_SECRET
     );
 
     console.log("Webhook verified:", event.type);
