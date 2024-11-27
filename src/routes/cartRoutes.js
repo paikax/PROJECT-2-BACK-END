@@ -267,6 +267,7 @@ router.post(
 );
 
 router.get("/vnpay_return", verifyToken, async function (req, res, next) {
+    const userId = req.user ? req.user.id : null; // Get user ID from token
     let vnp_Params = req.query;
     let secureHash = vnp_Params["vnp_SecureHash"];
   
@@ -285,7 +286,10 @@ router.get("/vnpay_return", verifyToken, async function (req, res, next) {
     let signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
   
     if (secureHash === signed) {
-      const userId = req.user.id; // Safely access user ID
+        if (!userId) {
+            // Handle scenario where user ID is not found
+            return res.status(400).json({ error: "User ID not found. Unable to process the order." });
+          }
       const cart = await cartService.getCart(userId);
   
       if (cart && cart.items.length > 0) {
