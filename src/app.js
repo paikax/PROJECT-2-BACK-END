@@ -10,7 +10,6 @@ const productRoutes = require("./routes/productRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const brandRoutes = require("./routes/brandRoutes");
 const cartRoutes = require("./routes/cartRoutes");
-const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const paymentController = require("./controllers/paymentController");
 require("../config/db");
@@ -22,6 +21,7 @@ const allowedOrigins = [
   "https://dev-g5.vercel.app",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
+  "http://localhost:5173",
 ];
 
 const app = express();
@@ -55,14 +55,7 @@ app.use("/api", productRoutes);
 app.use("/api", categoryRoutes);
 app.use("/api", brandRoutes);
 app.use("/api", cartRoutes);
-app.use("/api", orderRoutes);
 app.use("/api", paymentRoutes);
-
-app.post(
-  "/webhook",
-  express.raw({ type: "application/json" }), // Use raw body for Stripe webhook
-  paymentController.stripeWebhook
-);
 
 app.use("/", (req, res) => {
   res.send("This is DEV-G5 root endpoint^^.");

@@ -1,5 +1,4 @@
 const cartService = require("../services/cartService");
-const orderService = require("../services/orderService");
 
 // Get user's cart
 exports.getCart = async (req, res) => {
@@ -14,12 +13,13 @@ exports.getCart = async (req, res) => {
 // Add or update a product in the cart
 exports.addToCart = async (req, res) => {
   try {
-    const { productId, variantId, count } = req.body;
+    const { productId, variantId, count, deliveryAddress } = req.body;
     const cart = await cartService.addToCart(
       req.user.id,
       productId,
       variantId,
-      count
+      count,
+      deliveryAddress
     );
     res.status(200).json(cart);
   } catch (err) {
@@ -45,12 +45,13 @@ exports.removeFromCart = async (req, res) => {
 // Update the count of a product in the cart
 exports.updateCartItem = async (req, res) => {
   try {
-    const { productId, variantId, count } = req.body;
+    const { productId, variantId, count, deliveryAddress } = req.body;
     const cart = await cartService.updateCartItem(
       req.user.id,
       productId,
       variantId,
-      count
+      count,
+      deliveryAddress
     );
     res.status(200).json(cart);
   } catch (err) {
@@ -63,18 +64,6 @@ exports.clearCart = async (req, res) => {
   try {
     const cart = await cartService.clearCart(req.user.id);
     res.status(200).json({ message: "Cart cleared successfully", cart });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
-
-exports.placeOrder = async (req, res) => {
-  try {
-    const { deliveryAddress } = req.body; // User's delivery address
-    const userId = req.user.id;
-
-    const order = await orderService.createOrder(userId, deliveryAddress);
-    res.status(201).json(order);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

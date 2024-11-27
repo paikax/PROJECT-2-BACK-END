@@ -6,12 +6,19 @@ const router = express.Router();
 
 /**
  * @swagger
+ * tags:
+ *   - name: Payments
+ *     description: Payment related operations
+ */
+
+/**
+ * @swagger
  * /payment/create-checkout-session:
  *   post:
- *     summary: Create a Stripe checkout session for payment
+ *     summary: Creates a Stripe checkout session based on the user's cart
  *     tags: [Payments]
  *     security:
- *       - bearerAuth: []  # Requires a valid JWT token
+ *       - bearerAuth: []  # Authorization via Bearer token (JWT)
  *     requestBody:
  *       required: true
  *       content:
@@ -19,13 +26,24 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             properties:
- *               orderId:
+ *               deliveryAddress:
  *                 type: string
- *                 description: The ID of the order to be paid for
- *                 example: "648fcf3e4a70b6e7e5a4f123"
+ *                 description: The delivery address for the order
+ *                 example: "1234 Main St, City, Country"
  *     responses:
  *       200:
- *         description: URL to the Stripe Checkout session
+ *         description: A URL to the Stripe Checkout session to complete payment
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 url:
+ *                   type: string
+ *                   description: The URL of the Stripe Checkout session
+ *                   example: "https://checkout.stripe.com/pay/cs_test_12345"
+ *       400:
+ *         description: Bad request (empty cart or missing delivery address)
  *       401:
  *         description: Unauthorized (invalid or missing token)
  *       500:
@@ -37,10 +55,31 @@ router.post(
   paymentController.createCheckoutSession
 );
 
-// router.post(
-//   "/api/webhook",
-//   express.raw({ type: "application/json" }), // Use raw body for Stripe webhook
-//   paymentController.stripeWebhook // The controller handling webhook logic
-// );
+/**
+ * @swagger
+ * /payment-success/session_id:
+ *   get:
+ *     summary: Handles the payment success after the user completes the payment
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []  # Authorization via Bearer token (JWT)
+ *     responses:
+ *       200:
+ *         description: Success page after a successful payment
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Confirmation message after successful payment
+ *                   example: "Payment was successful. Order created."
+ *       401:
+ *         description: Unauthorized (invalid or missing token)
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/payment-success", verifyToken, paymentController.paymentSuccess);
 
 module.exports = router;

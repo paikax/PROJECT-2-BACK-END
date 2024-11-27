@@ -6,20 +6,20 @@ exports.getCart = async (userId) => {
   const cart = await ShoppingCart.findOne({ user: userId }).populate(
     "items.product",
     "name price imageUrls"
-  ); // Populate product details
+  );
   if (!cart) {
-    return { user: userId, items: [] }; // Return empty cart if none exists
+    return { user: userId, items: [], deliveryAddress: "" }; // Return empty cart if none exists
   }
 
-  // Add variant details manually by looking up the variant in the product's variants array
+  // Add variant details manually
   for (const item of cart.items) {
-    const product = await Product.findById(item.product); // Find the product
+    const product = await Product.findById(item.product);
     if (product && item.variantId) {
       const variant = product.variants.find(
         (v) => v._id.toString() === item.variantId
       );
       if (variant) {
-        item.variantDetails = variant; // Attach variant details dynamically
+        item.variantDetails = variant;
       }
     }
   }
@@ -28,14 +28,13 @@ exports.getCart = async (userId) => {
 };
 
 // Add or update a product in the cart
-exports.addToCart = async (userId, productId, variantId, count) => {
+exports.addToCart = async (userId, productId, variantId, count, deliveryAddress) => {
   const product = await Product.findById(productId);
   if (!product) {
     throw new Error("Product not found");
   }
 
   if (variantId) {
-    // Check if the variant exists in the product
     const variant = product.variants.find(
       (v) => v._id.toString() === variantId
     );
@@ -47,17 +46,21 @@ exports.addToCart = async (userId, productId, variantId, count) => {
   let cart = await ShoppingCart.findOne({ user: userId });
   if (!cart) {
     // Create a new cart if none exists
-    cart = new ShoppingCart({ user: userId, items: [] });
+    cart = new ShoppingCart({ user: userId, items: [], deliveryAddress });
+  } else {
+    // Update delivery address if it exists
+    if (deliveryAddress) {
+      cart.deliveryAddress = deliveryAddress;
+    }
   }
 
-  // Check if the product (with the specific variant) is already in the cart
   const existingItem = cart.items.find(
     (item) =>
       item.product.toString() === productId && item.variantId === variantId
   );
 
   if (existingItem) {
-    existingItem.count += count; // Update count
+    existingItem.count += count;
   } else {
     cart.items.push({ product: productId, variantId, count });
   }
@@ -65,6 +68,7 @@ exports.addToCart = async (userId, productId, variantId, count) => {
   await cart.save();
   return cart;
 };
+
 
 // Remove a product from the cart
 exports.removeFromCart = async (userId, productId, variantId) => {
