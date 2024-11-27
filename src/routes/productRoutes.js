@@ -13,6 +13,7 @@ const router = express.Router();
  *   description: API for managing products
  */
 
+// Create a Product
 /**
  * @swagger
  * /products:
@@ -31,67 +32,48 @@ const router = express.Router();
  *               name:
  *                 type: string
  *                 description: Name of the product
- *                 example: Smartphone
- *               description:
+ *               descriptionFileUrl:
  *                 type: string
- *                 description: Description of the product
- *                 example: A high-quality smartphone with advanced features
+ *                 description: URL of the product description file
  *               price:
  *                 type: number
  *                 description: Price of the product
- *                 example: 999.99
  *               imageUrls:
  *                 type: array
  *                 items:
  *                   type: string
- *                 description: Array of image URLs for the product
- *                 example: ["https://example.com/image1.jpg", "https://example.com/image2.jpg"]
+ *                 description: Array of image URLs
  *               variants:
  *                 type: array
+ *                 description: Product variants
  *                 items:
  *                   type: object
  *                   properties:
- *                     name:
- *                       type: string
- *                       description: Name of the variant
- *                       example: Color
+ *                     price:
+ *                       type: number
  *                     stockQuantity:
  *                       type: number
- *                       description: Quantity in stock
- *                       example: 100
  *               attributes:
  *                 type: array
- *                 description: Array of attributes for the product
  *                 items:
  *                   type: object
  *                   properties:
- *                     name:
- *                       type: string
- *                       description: Name of the attribute
- *                       example: Size
  *                     value:
  *                       type: array
  *                       items:
  *                         type: string
- *                       description: Values for the attribute
- *                       example: ["Small", "Medium", "Large"]
  *               categoryId:
  *                 type: string
- *                 description: ID of the category the product belongs to
- *                 example: 63cfb8a9e4b0e9a0f5a3e8d1
+ *                 description: Category ID
  *               brandId:
  *                 type: string
- *                 description: ID of the brand the product belongs to
- *                 example: 63cfb8a9e4b0e9a0f5a3e8d2
+ *                 description: Brand ID
  *               information:
  *                 type: object
+ *                 description: Additional product information
  *     responses:
  *       201:
  *         description: Product created successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Product'
  *       400:
  *         description: Bad request
  */
@@ -102,15 +84,32 @@ router.post(
   productController.createProduct
 );
 
+// Retrieve All Products with Verification and Filtering Options
 /**
  * @swagger
  * /products:
  *   get:
- *     summary: Retrieve all verified products
+ *     summary: Retrieve all products
  *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         description: Filter products by verification status
+ *         schema:
+ *           type: string
+ *           enum: [pending, approved, rejected]
+ *       - in: query
+ *         name: minRating
+ *         description: Filter products by minimum rating
+ *         schema:
+ *           type: number
+ *           minimum: 0
+ *           maximum: 5
  *     responses:
  *       200:
- *         description: List of verified products
+ *         description: List of products retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -122,6 +121,7 @@ router.post(
  */
 router.get("/products", verifyToken, productController.getAllProducts);
 
+// Retrieve a Product by ID
 /**
  * @swagger
  * /products/{id}:
@@ -138,10 +138,6 @@ router.get("/products", verifyToken, productController.getAllProducts);
  *     responses:
  *       200:
  *         description: Product retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Product'
  *       400:
  *         description: Bad request
  *       404:
@@ -149,6 +145,7 @@ router.get("/products", verifyToken, productController.getAllProducts);
  */
 router.get("/products/:id", productController.getProduct);
 
+// Update a Product by ID
 /**
  * @swagger
  * /products/{id}:
@@ -173,26 +170,20 @@ router.get("/products/:id", productController.getProduct);
  *             properties:
  *               name:
  *                 type: string
- *                 description: Updated name of the product
- *                 example: Updated Smartphone
- *               description:
+ *               descriptionFileUrl:
  *                 type: string
- *                 description: Updated description of the product
- *                 example: Updated description
  *               price:
  *                 type: number
- *                 description: Updated price of the product
- *                 example: 1099.99
  *               categoryId:
  *                 type: string
- *                 description: Updated category ID
+ *               brandId:
+ *                 type: string
+ *               rating:
+ *                 type: number
+ *                 description: Updated product rating (0-5)
  *     responses:
  *       200:
  *         description: Product updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Product'
  *       400:
  *         description: Bad request
  *       404:
@@ -205,6 +196,7 @@ router.put(
   productController.updateProduct
 );
 
+// Delete a Product
 /**
  * @swagger
  * /products/{id}:
@@ -235,6 +227,7 @@ router.delete(
   productController.deleteProduct
 );
 
+// Report a Product
 /**
  * @swagger
  * /report/products/{id}:
@@ -260,7 +253,6 @@ router.delete(
  *               reason:
  *                 type: string
  *                 description: Reason for reporting the product
- *                 example: "Inappropriate content"
  *     responses:
  *       200:
  *         description: Product reported successfully
@@ -273,31 +265,25 @@ router.post(
   productController.reportProduct
 );
 
+// Get Products by Verification Status
 /**
  * @swagger
  * /products/status:
  *   get:
- *     summary: Get products by status
+ *     summary: Get products by verification status
  *     tags: [Products]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: status
- *         required: false
- *         description: Filter products by verification status
+ *         description: Filter by verification status
  *         schema:
  *           type: string
  *           enum: [pending, approved, rejected]
  *     responses:
  *       200:
- *         description: List of products filtered by status
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Product'
+ *         description: Products filtered by status
  *       400:
  *         description: Bad request
  */
@@ -308,6 +294,7 @@ router.get(
   productController.getProductsByStatus
 );
 
+// Update Product Verification Status
 /**
  * @swagger
  * /products/verify/{id}:
@@ -320,7 +307,7 @@ router.get(
  *       - in: path
  *         name: id
  *         required: true
- *         description: ID of the product to update verification for
+ *         description: ID of the product to verify
  *         schema:
  *           type: string
  *     requestBody:
@@ -333,16 +320,13 @@ router.get(
  *               status:
  *                 type: string
  *                 enum: [pending, approved, rejected]
- *                 description: Verification status
  *               reason:
  *                 type: string
- *                 description: Reason for status
  *               description:
  *                 type: string
- *                 description: A description for the verification status
  *     responses:
  *       200:
- *         description: Product verification status updated successfully
+ *         description: Verification status updated successfully
  *       400:
  *         description: Bad request
  *       404:
@@ -352,7 +336,7 @@ router.patch(
   "/products/verify/:id",
   verifyToken,
   authorizeRole("admin"),
-  updateVerifyDescription, // Middleware cập nhật description
+  updateVerifyDescription,
   productController.updateProductVerify
 );
 

@@ -32,9 +32,26 @@ const router = express.Router();
  *                       product:
  *                         type: string
  *                         description: Product ID
- *                       variantId:
- *                         type: string
- *                         description: Variant ID (if applicable)
+ *                       productDetails:
+ *                         type: object
+ *                         description: Details about the product
+ *                         properties:
+ *                           name:
+ *                             type: string
+ *                           price:
+ *                             type: string
+ *                           imageUrls:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                       variantDetails:
+ *                         type: object
+ *                         description: Details about the variant
+ *                         properties:
+ *                           price:
+ *                             type: string
+ *                           stockQuantity:
+ *                             type: number
  *                       count:
  *                         type: integer
  *                         description: Quantity of the product
@@ -61,43 +78,19 @@ router.get("/cart/", verifyToken, cartController.getCart);
  *               productId:
  *                 type: string
  *                 description: ID of the product
- *                 example: "63cfb8a9e4b0e9a0f5a3e8d1"
  *               variantId:
  *                 type: string
  *                 description: ID of the variant (if applicable)
- *                 example: "63cfb8a9e4b0e9a0f5a3e8d2"
  *               count:
  *                 type: integer
  *                 description: Quantity of the product
- *                 example: 2
  *     responses:
  *       200:
  *         description: Product added or updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 user:
- *                   type: string
- *                   description: User ID
- *                 items:
- *                   type: array
- *                   description: Updated cart items
- *                   items:
- *                     type: object
- *                     properties:
- *                       product:
- *                         type: string
- *                         description: Product ID
- *                       variantId:
- *                         type: string
- *                         description: Variant ID (if applicable)
- *                       count:
- *                         type: integer
- *                         description: Quantity of the product
  *       400:
  *         description: Bad request
+ *       404:
+ *         description: Product not found or unavailable
  */
 router.post("/cart/add", verifyToken, cartController.addToCart);
 
@@ -125,33 +118,10 @@ router.post("/cart/add", verifyToken, cartController.addToCart);
  *     responses:
  *       200:
  *         description: Product removed successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 user:
- *                   type: string
- *                   description: User ID
- *                 items:
- *                   type: array
- *                   description: Updated cart items
- *                   items:
- *                     type: object
- *                     properties:
- *                       product:
- *                         type: string
- *                         description: Product ID
- *                       variantId:
- *                         type: string
- *                         description: Variant ID
- *                       count:
- *                         type: integer
- *                         description: Quantity of the product
- *       400:
- *         description: Bad request
  *       404:
  *         description: Product not found in the cart
+ *       400:
+ *         description: Bad request
  */
 router.delete("/cart/remove", verifyToken, cartController.removeFromCart);
 
@@ -173,45 +143,19 @@ router.delete("/cart/remove", verifyToken, cartController.removeFromCart);
  *               productId:
  *                 type: string
  *                 description: ID of the product to update
- *                 example: "63cfb8a9e4b0e9a0f5a3e8d1"
  *               variantId:
  *                 type: string
  *                 description: ID of the variant (if applicable)
- *                 example: "63cfb8a9e4b0e9a0f5a3e8d2"
  *               count:
  *                 type: integer
  *                 description: Updated quantity
- *                 example: 3
  *     responses:
  *       200:
  *         description: Product quantity updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 user:
- *                   type: string
- *                   description: User ID
- *                 items:
- *                   type: array
- *                   description: Updated cart items
- *                   items:
- *                     type: object
- *                     properties:
- *                       product:
- *                         type: string
- *                         description: Product ID
- *                       variantId:
- *                         type: string
- *                         description: Variant ID
- *                       count:
- *                         type: integer
- *                         description: Quantity of the product
- *       400:
- *         description: Bad request
  *       404:
  *         description: Product not found in the cart
+ *       400:
+ *         description: Bad request
  */
 router.patch("/cart/update", verifyToken, cartController.updateCartItem);
 
@@ -226,15 +170,6 @@ router.patch("/cart/update", verifyToken, cartController.updateCartItem);
  *     responses:
  *       200:
  *         description: Cart cleared successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Confirmation message
- *                   example: "Cart cleared successfully"
  *       400:
  *         description: Bad request
  */

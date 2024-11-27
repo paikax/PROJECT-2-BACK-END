@@ -1,21 +1,33 @@
-const productService = require('../services/productService');
+const productService = require("../services/productService");
 
+// Create Product
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, imageUrls, variants, attributes, views, brandId, information } = req.body;
-    const product = await productService.createProduct(
+    const {
       name,
-      description,
       price,
+      descriptionFileUrl,
+      information,
       imageUrls,
       variants,
       attributes,
-      req.user.id,
-      req.body.categoryId,
-      views,
-      brandId, // Pass brandId to the service layer
-      information
-    );
+      categoryId,
+      brandId,
+    } = req.body;
+
+    const product = await productService.createProduct({
+      sellerId: req.user.id,
+      name,
+      price,
+      descriptionFileUrl,
+      information,
+      imageUrls,
+      variants,
+      attributes,
+      categoryId,
+      brandId,
+    });
+
     res.status(201).json(product);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -32,10 +44,10 @@ exports.getAllProducts = async (req, res) => {
     let query = {};
     if (userRole === "admin" || userRole === "seller") {
       // Admins and sellers can see both approved and pending products
-      query = { 'verify.status': { $in: ['approved', 'pending'] } }; // Show both approved and pending
+      query = { "verify.status": { $in: ["approved", "pending"] } }; // Show both approved and pending
     } else {
       // Everyone else can only see approved products
-      query = { 'verify.status': 'approved' };
+      query = { "verify.status": "approved" };
     }
 
     // Fetch products based on the query
@@ -58,19 +70,14 @@ exports.getProduct = async (req, res) => {
   }
 };
 
+// Update Product
 exports.updateProduct = async (req, res) => {
   try {
-    const { name, description, price, imageUrls, variants, attributes, categoryId, brandId } = req.body;
-    const product = await productService.updateProduct(req.params.id, { 
-      name, 
-      description, 
-      price, 
-      imageUrls, 
-      variants, 
-      attributes, 
-      category: categoryId, 
-      brandId // Pass brandId to the service layer
-    });
+    const updates = {
+      ...req.body,
+      updatedAt: new Date(),
+    };
+    const product = await productService.updateProduct(req.params.id, updates);
     res.status(200).json(product);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -80,7 +87,7 @@ exports.updateProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     await productService.deleteProduct(req.params.id, req.user.id);
-    res.status(200).json({ message: 'Product deleted successfully' });
+    res.status(200).json({ message: "Product deleted successfully" });
   } catch (err) {
     res.status(403).json({ error: err.message }); // Use 403 Forbidden if the user is not authorized
   }
@@ -102,7 +109,12 @@ exports.updateProductVerify = async (req, res) => {
     const { id } = req.params;
     const { status, reason, description } = req.body;
 
-    const product = await productService.updateProductVerify(id, status, reason, description);
+    const product = await productService.updateProductVerify(
+      id,
+      status,
+      reason,
+      description
+    );
     res.status(200).json(product);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -118,7 +130,7 @@ exports.reportProduct = async (req, res) => {
 
     const report = await productService.addProductReport(id, userId, reason);
 
-    res.status(200).json({ message: 'Product reported successfully.', report });
+    res.status(200).json({ message: "Product reported successfully.", report });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

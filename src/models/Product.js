@@ -1,19 +1,25 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema({
+  sellerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   name: {
     type: String,
     required: true,
   },
-  description: {
-    type: String,
-    required: true,
-  },
   price: {
-    type: Number,
+    type: String,
     required: true,
     min: 0,
   },
+  descriptionFileUrl: {
+    type: String,
+    required: true,
+  },
+  information: {},
   imageUrls: [
     {
       type: String,
@@ -30,26 +36,20 @@ const productSchema = new mongoose.Schema({
   },
   variants: [
     {
-      name: {
+      price: {
         type: String,
-        required: true,
-      },
-      stockQuantity: {
-        type: Number,
         required: true,
         min: 0,
       },
-      additionalData: {
-        type: String, // New field for additional data
+      stockQuantity: {
+        type: String,
+        required: true,
+        min: 0,
       },
     },
   ],
   attributes: [
     {
-      name: {
-        type: String,
-        required: true,
-      },
       value: [
         {
           type: String,
@@ -67,12 +67,12 @@ const productSchema = new mongoose.Schema({
   verify: {
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected'],
-      default: 'pending',
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
     },
     description: {
       type: String,
-      default: 'This product is under review. Please wait...',
+      default: "This product is under review. Please wait...",
     },
     reason: {
       type: String,
@@ -82,23 +82,20 @@ const productSchema = new mongoose.Schema({
     type: Number,
     min: 0,
   },
-  seller: {
+  categoryId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: "Category",
     required: true,
   },
-  category: {
+  brandId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category',
+    ref: "Brand",
     required: true,
   },
-  brand: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Brand',
-    required: true,
-  },
-  information: {
+  reportId: {
+    type: String,
+    default: null,
   },
 });
 
-module.exports = mongoose.model('Product', productSchema);
+module.exports = mongoose.model("Product", productSchema);

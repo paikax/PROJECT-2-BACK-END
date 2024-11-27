@@ -11,7 +11,9 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const brandRoutes = require("./routes/brandRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
-require("./config/db");
+const paymentRoutes = require("./routes/paymentRoutes");
+const paymentController = require("./controllers/paymentController");
+require("../config/db");
 require("dotenv").config({ path: "./../development/.env" });
 
 const allowedOrigins = [
@@ -46,6 +48,7 @@ app.use(rateLimiter);
 // Add Swagger UI route
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs)); // Swagger documentation route
 
+// main routes
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api", productRoutes);
@@ -53,14 +56,16 @@ app.use("/api", categoryRoutes);
 app.use("/api", brandRoutes);
 app.use("/api", cartRoutes);
 app.use("/api", orderRoutes);
+app.use("/api", paymentRoutes);
 
-app.use("/payment", (req, res) => {
-  res.render('payment.ejs')
-});
+app.post(
+  "/webhook",
+  express.raw({ type: "application/json" }), // Use raw body for Stripe webhook
+  paymentController.stripeWebhook
+);
 
 app.use("/", (req, res) => {
   res.send("This is DEV-G5 root endpoint^^.");
 });
-
 
 module.exports = app;

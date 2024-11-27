@@ -58,7 +58,6 @@ exports.updateCartItem = async (req, res) => {
   }
 };
 
-
 // Clear the cart
 exports.clearCart = async (req, res) => {
   try {

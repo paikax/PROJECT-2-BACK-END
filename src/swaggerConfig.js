@@ -37,8 +37,8 @@ const swaggerOptions = {
   apis: [
     // "./../src/Controller/*.js",
     // "./../src/models/*.js",
-    // "./../src/routes/*.js", // local test
-    "./src/routes/*.js", // deployment test
+    "./../src/routes/*.js", // local test
+    // "./src/routes/*.js", // deployment test
   ],
 };
 
