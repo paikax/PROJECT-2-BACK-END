@@ -212,8 +212,11 @@ router.post(
 
     // Calculate total price
     const totalPrice = Math.round(
-      cart.items.reduce((sum, item) => sum + item.count * item.product.price, 0)
-    );
+        cart.items.reduce((sum, item) => {
+          const variantPrice = item.variantDetails ? parseFloat(item.variantDetails.price) : parseFloat(item.product.price);
+          return sum + (item.count * variantPrice);
+        }, 0)
+      );
 
     let tmnCode = config.get("vnp_TmnCode");
     let secretKey = config.get("vnp_HashSecret");
@@ -271,9 +274,8 @@ router.get("/vnpay_return", verifyToken, async function (req, res, next) {
     delete vnp_Params["vnp_SecureHashType"];
   
     vnp_Params = sortObject(vnp_Params);
-    
+  
     let config = require("config");
-    let tmnCode = config.get("vnp_TmnCode");
     let secretKey = config.get("vnp_HashSecret");
   
     let querystring = require("qs");
@@ -287,16 +289,31 @@ router.get("/vnpay_return", verifyToken, async function (req, res, next) {
       const cart = await cartService.getCart(userId);
   
       if (cart && cart.items.length > 0) {
-        const totalAmount = Math.round(
-          cart.items.reduce((sum, item) => sum + item.count * item.product.price, 0)
+        const totalQuantity = cart.items.reduce((sum, item) => sum + item.count, 0);
+        
+        // Calculate total price based on variant prices
+        const totalPrice = Math.round(
+          cart.items.reduce((sum, item) => {
+            const variantPrice = item.variantDetails ? parseFloat(item.variantDetails.price) : parseFloat(item.product.price);
+            return sum + (item.count * variantPrice);
+          }, 0)
         );
   
+        const orderItems = cart.items.map(item => ({
+          productId: item.product, // Assuming item.product is the product ID
+          variantId: item.variantId, // Assuming item.variantId is the variant ID (if applicable)
+          quantity: item.count,
+          price: item.variantDetails ? parseFloat(item.variantDetails.price) : parseFloat(item.product.price), // Use variant price if available
+        }));
+  
         const order = new Order({
-          user: userId,
-          items: cart.items,
-          totalAmount,
+          userId: userId,
+          status: "Pending",
+          paymentStatus: "Paid", // Set to Paid since payment is successful
+          totalQuantity: totalQuantity,
+          totalPrice: totalPrice, // Use the calculated total price here
           deliveryAddress: cart.deliveryAddress || "Default Address", // Adjust as needed
-          status: "Pending", // Set initial status
+          orderItems: orderItems,
         });
   
         await order.save();
@@ -307,14 +324,12 @@ router.get("/vnpay_return", verifyToken, async function (req, res, next) {
           message: "Payment successful",
           order: {
             id: order._id,
-            totalAmount: order.totalAmount,
+            totalQuantity: order.totalQuantity,
+            totalPrice: order.totalPrice, // Ensure this reflects the correct total price
             deliveryAddress: order.deliveryAddress,
             status: order.status,
-            items: order.items.map(item => ({
-              product: item.product,
-              variantId: item.variantId,
-              count: item.count,
-            })),
+            paymentStatus: order.paymentStatus,
+            orderItems: order.orderItems,
           },
         });
       } else {
@@ -323,7 +338,7 @@ router.get("/vnpay_return", verifyToken, async function (req, res, next) {
     } else {
       return res.status(400).json({ error: "Invalid signature" });
     }
-  });
+});
 
 function sortObject(obj) {
   let sorted = {};
