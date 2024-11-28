@@ -11,17 +11,21 @@ exports.createCheckoutSession = async (userId, orderId) => {
   }
 
   // Prepare Stripe line items from the order
-  const lineItems = order.orderItems.map((item) => ({
-    price_data: {
-      currency: "vnd", // Currency in VND
-      product_data: {
-        name: item.productId.name,
-        images: [item.productId.imageUrls?.[0] || "default-image-url"], // Fallback for image URL
+  const lineItems = order.orderItems.map((item) => {
+    // Remove dots from price before converting to number
+    const unitAmount = parseFloat(String(item.price || "0").replace(/\./g, ""));
+    return {
+      price_data: {
+        currency: "vnd", // Currency in VND
+        product_data: {
+          name: item.productId.name,
+          images: [item.productId.imageUrls?.[0] || "default-image-url"], // Fallback for image URL
+        },
+        unit_amount: Math.round(unitAmount), // Amount in VND
       },
-      unit_amount: Math.round(parseFloat(item.price) || 0), // Amount in VND
-    },
-    quantity: Math.max(1, parseInt(item.quantity) || 1), // Default quantity to 1 if invalid
-  }));
+      quantity: Math.max(1, parseInt(item.quantity) || 1), // Default quantity to 1 if invalid
+    };
+  });
 
   // Create Stripe Checkout session
   const session = await stripe.checkout.sessions.create({

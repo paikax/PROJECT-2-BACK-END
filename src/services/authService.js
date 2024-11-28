@@ -116,7 +116,7 @@ exports.loginUser = async (email, password) => {
       imageUrl: user.imageUrl,
     },
     process.env.JWT_SECRET,
-    { expiresIn: "35m" } // Short-lived token
+    { expiresIn: "3d" } // Short-lived token
   );
 
   const refreshToken = jwt.sign(
@@ -126,7 +126,7 @@ exports.loginUser = async (email, password) => {
       role: user.role,
     },
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: "3d" } // Long-lived token
+    { expiresIn: "7d" } // Long-lived token
   );
   return { accessToken, refreshToken };
 };

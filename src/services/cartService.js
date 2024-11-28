@@ -19,6 +19,8 @@ exports.getCart = async (userId) => {
         (v) => v._id.toString() === item.variantId
       );
       if (variant) {
+        // Remove dots from variant price
+        variant.price = parseFloat(variant.price.replace(/\./g, ""));
         item.variantDetails = variant;
       }
     }
@@ -28,7 +30,13 @@ exports.getCart = async (userId) => {
 };
 
 // Add or update a product in the cart
-exports.addToCart = async (userId, productId, variantId, count, deliveryAddress) => {
+exports.addToCart = async (
+  userId,
+  productId,
+  variantId,
+  count,
+  deliveryAddress
+) => {
   const product = await Product.findById(productId);
   if (!product) {
     throw new Error("Product not found");
@@ -41,6 +49,8 @@ exports.addToCart = async (userId, productId, variantId, count, deliveryAddress)
     if (!variant) {
       throw new Error("Variant not found for this product");
     }
+    // Remove dots from variant price
+    variant.price = parseFloat(variant.price.replace(/\./g, ""));
   }
 
   let cart = await ShoppingCart.findOne({ user: userId });
@@ -68,7 +78,6 @@ exports.addToCart = async (userId, productId, variantId, count, deliveryAddress)
   await cart.save();
   return cart;
 };
-
 
 // Remove a product from the cart
 exports.removeFromCart = async (userId, productId, variantId) => {
