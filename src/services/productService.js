@@ -33,16 +33,33 @@ exports.createProduct = async ({
   return product;
 };
 
-exports.getAllProducts = async (query) => {
-  try {
-    return await Product.find(query)
-      .populate("sellerId", "fullName") // Populate seller details
-      .populate("categoryId", "name") // Populate category details
-      .populate("brandId", "name"); // Populate brand details
-  } catch (err) {
-    throw new Error("Failed to retrieve products");
-  }
-};
+exports.getAllProducts = async (query, limit, skip) => {
+    try {
+      // Truy vấn với phân trang
+      const products = await Product.find(query)
+        .skip(skip)
+        .limit(limit)
+        .populate("sellerId", "fullName") // Populate seller details
+        .populate("categoryId", "name") // Populate category details
+        .populate("brandId", "name"); // Populate brand details
+  
+      // Tính tổng số sản phẩm để hỗ trợ UI hiển thị phân trang
+      const totalProducts = await Product.countDocuments(query);
+  
+      return {
+        data: products,
+        pagination: {
+          total: totalProducts,
+          limit,
+          currentPage: Math.ceil(skip / limit) + 1,
+          totalPages: Math.ceil(totalProducts / limit),
+        },
+      };
+    } catch (err) {
+      throw new Error("Failed to retrieve products");
+    }
+  };
+  
 
 // Get Product by ID
 exports.getProductById = async (id) => {
@@ -101,27 +118,31 @@ exports.deleteProduct = async (id, userId) => {
   await product.deleteOne();
 };
 
-// Get Products by Verification Status
+// Get Products by Status
 exports.getProductsByStatus = async (status) => {
-  const query = status ? { "verify.status": status } : {};
-  return await Product.find(query)
-    .populate("sellerId", "fullName")
-    .populate("categoryId", "name")
-    .populate("brandId", "name");
-};
-
-// Update Product Verification
-exports.updateProductVerify = async (id, { status, reason, description }) => {
-  const product = await Product.findById(id);
-  if (!product) throw new Error("Product not found");
-
-  product.verify.status = status;
-  product.verify.reason = reason || product.verify.reason;
-  product.verify.description = description || product.verify.description;
-
-  await product.save();
-  return product;
-};
+    const query = status ? { status } : {};
+    return await Product.find(query)
+      .populate("sellerId", "fullName")
+      .populate("categoryId", "name")
+      .populate("brandId", "name");
+  };
+  
+  exports.updateProductStatus = async (productId, status) => {
+    // Kiểm tra xem sản phẩm có tồn tại hay không
+    const product = await Product.findById(productId);
+    if (!product) throw new Error("Product not found");
+  
+    // Cập nhật trạng thái và thời gian chỉnh sửa
+    product.status = status;
+    product.updatedAt = new Date();
+    
+    // Lưu sản phẩm đã cập nhật
+    const updatedProduct = await product.save();
+  
+    return updatedProduct; // Trả về document đã được cập nhật
+  };
+  
+  
 
 // Add Product Report
 exports.addProductReport = async (productId, userId, reason) => {

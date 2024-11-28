@@ -26,14 +26,6 @@ const productSchema = new mongoose.Schema({
       required: true,
     },
   ],
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
   variants: [
     {
       price: {
@@ -64,20 +56,11 @@ const productSchema = new mongoose.Schema({
     min: 0,
     max: 5,
   },
-  verify: {
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
-    description: {
-      type: String,
-      default: "This product is under review. Please wait...",
-    },
-    reason: {
-      type: String,
-    },
-  },
   views: {
     type: Number,
     min: 0,
@@ -96,6 +79,8 @@ const productSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-});
+},
+{ timestamps: true }
+);
 
 module.exports = mongoose.model("Product", productSchema);

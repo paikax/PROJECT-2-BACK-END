@@ -2,7 +2,9 @@ const express = require("express");
 const productController = require("../controllers/productController");
 const { verifyToken } = require("../middleware/authMiddleware");
 const authorizeRole = require("../middleware/roleMiddleware");
-const { updateVerifyDescription } = require("../middleware/verifyMiddleware");
+const {filterByRole} = require("../middleware/filterMiddleware");
+const {filterProduct} = require("../middleware/filterMiddleware");
+const paginationMiddleware = require("../middleware/paginationMiddleware");
 
 const router = express.Router();
 
@@ -119,7 +121,7 @@ router.post(
  *       400:
  *         description: Bad request
  */
-router.get("/products", verifyToken, productController.getAllProducts);
+router.get("/products", verifyToken, paginationMiddleware, filterByRole, filterProduct,  productController.getAllProducts);
 
 // Retrieve a Product by ID
 /**
@@ -333,11 +335,10 @@ router.get(
  *         description: Product not found
  */
 router.patch(
-  "/products/verify/:id",
-  verifyToken,
-  authorizeRole("admin"),
-  updateVerifyDescription,
-  productController.updateProductVerify
-);
+    "/products/status/:id",
+    verifyToken,
+    authorizeRole("admin"),
+    productController.updateProductStatus
+  );
 
 module.exports = router;

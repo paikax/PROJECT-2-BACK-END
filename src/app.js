@@ -12,6 +12,7 @@ const brandRoutes = require("./routes/brandRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const paymentController = require("./controllers/paymentController");
+const requestRoutes = require("./routes/requestRoutes");
 require("../config/db");
 require("dotenv").config({ path: "./../development/.env" });
 
@@ -56,6 +57,7 @@ app.use("/api", categoryRoutes);
 app.use("/api", brandRoutes);
 app.use("/api", cartRoutes);
 app.use("/api", paymentRoutes);
+app.use("/api", requestRoutes);
 
 app.use("/", (req, res) => {
   res.send("This is DEV-G5 root endpoint^^.");
