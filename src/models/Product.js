@@ -19,7 +19,7 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  information: {},
+  information: {}, // Flexible for additional information
   imageUrls: [
     {
       type: String,
@@ -46,18 +46,26 @@ const productSchema = new mongoose.Schema({
         required: true,
         min: 0,
       },
+      attributes: {
+        option: { type: String, required: true }, // Example: "16gb-256gb"
+        color: { type: String, required: true }, // Example: "black" or "white"
+      },
     },
   ],
-  attributes: [
-    {
-      value: [
-        {
-          type: String,
-          required: true,
-        },
-      ],
-    },
-  ],
+  attributes: {
+    option: [
+      {
+        type: String,
+        required: true,
+      },
+    ],
+    color: [
+      {
+        type: String,
+        required: true,
+      },
+    ],
+  },
   rating: {
     type: Number,
     default: 0,
@@ -80,6 +88,7 @@ const productSchema = new mongoose.Schema({
   },
   views: {
     type: Number,
+    default: 0,
     min: 0,
   },
   categoryId: {
