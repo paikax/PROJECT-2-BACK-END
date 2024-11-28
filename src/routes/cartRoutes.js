@@ -180,8 +180,46 @@ router.patch("/cart/update", verifyToken, cartController.updateCartItem);
  */
 router.delete("/cart/clear", verifyToken, cartController.clearCart);
 
+/**
+ * @swagger
+ * /vnapy-checkout:
+ *   post:
+ *     summary: Initiate payment checkout via VNPay
+ *     tags: [Payment]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               deliveryAddress:
+ *                 type: string
+ *                 description: Address for delivery
+ *               bankCode:
+ *                 type: string
+ *                 description: Code of the bank (optional)
+ *               language:
+ *                 type: string
+ *                 description: Language (e.g. "vn" or "en")
+ *     responses:
+ *       200:
+ *         description: VNPay checkout URL generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 vnpUrl:
+ *                   type: string
+ *                   description: VNPay payment URL
+ *       400:
+ *         description: Bad request, e.g., missing delivery address or empty cart
+ */
 router.post(
-  "/create_payment_url",
+  "/vnapy-checkout",
   verifyToken,
   async function (req, res, next) {
     process.env.TZ = "Asia/Ho_Chi_Minh";
@@ -266,7 +304,40 @@ router.post(
   }
 );
 
-router.get("/vnpay_return", verifyToken, async function (req, res, next) {
+/**
+ * @swagger
+ * /vnpay-success:
+ *   get:
+ *     summary: Handle VNPay payment success
+ *     tags: [Payment]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: vnp_TxnRef
+ *         required: true
+ *         description: VNPay transaction reference
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: vnp_Amount
+ *         required: true
+ *         description: Amount paid
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: vnp_SecureHash
+ *         required: true
+ *         description: Secure hash for verification
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Payment verified and order created successfully
+ *       400:
+ *         description: Invalid signature or cart is empty
+ */
+router.get("/vnpay-success", verifyToken, async function (req, res, next) {
     const userId = req.user ? req.user.id : null; // Get user ID from token
     let vnp_Params = req.query;
     let secureHash = vnp_Params["vnp_SecureHash"];

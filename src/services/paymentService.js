@@ -29,8 +29,8 @@ exports.createCheckoutSession = async (userId, orderId) => {
     mode: "payment",
     // customer_email: order.user.email,
     line_items: lineItems,
-    success_url: `${process.env.CLIENT_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`, // Redirect on success
-    cancel_url: `${process.env.CLIENT_URL}/payment-failed`, // Redirect on failure
+    success_url: `${process.env.CLIENT_URL}/api/stripe-success?session_id={CHECKOUT_SESSION_ID}`, // Redirect on success
+    cancel_url: `${process.env.CLIENT_URL}/api/payment-failed`, // Redirect on failure
     metadata: {
       orderId: String(orderId), // Convert orderId to a string
       userId: String(userId), // Convert userId to a string, if necessary
