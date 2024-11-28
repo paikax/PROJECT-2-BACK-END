@@ -182,7 +182,7 @@ router.delete("/cart/clear", verifyToken, cartController.clearCart);
 
 /**
  * @swagger
- * /vnapy-checkout:
+ * /vnpay-checkout:
  *   post:
  *     summary: Initiate payment checkout via VNPay
  *     tags: [Payment]
@@ -219,7 +219,7 @@ router.delete("/cart/clear", verifyToken, cartController.clearCart);
  *         description: Bad request, e.g., missing delivery address or empty cart
  */
 router.post(
-  "/vnapy-checkout",
+  "/vnpay-checkout",
   verifyToken,
   async function (req, res, next) {
     process.env.TZ = "Asia/Ho_Chi_Minh";
