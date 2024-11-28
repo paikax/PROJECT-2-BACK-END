@@ -13,7 +13,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /payment/create-checkout-session:
+ * /payment/stripe-checkout:
  *   post:
  *     summary: Creates a Stripe checkout session based on the user's cart
  *     tags: [Payments]
@@ -50,14 +50,14 @@ const router = express.Router();
  *         description: Internal server error
  */
 router.post(
-  "/payment/create-checkout-session",
+  "/payment/stripe-checkout",
   verifyToken,
   paymentController.createCheckoutSession
 );
 
 /**
  * @swagger
- * /payment-success/session_id:
+ * /stripe-success/session_id:
  *   get:
  *     summary: Handles the payment success after the user completes the payment
  *     tags: [Payments]
@@ -80,6 +80,6 @@ router.post(
  *       500:
  *         description: Internal server error
  */
-router.get("/payment-success", verifyToken, paymentController.paymentSuccess);
+router.get("/stripe-success", verifyToken, paymentController.paymentSuccess);
 
 module.exports = router;
