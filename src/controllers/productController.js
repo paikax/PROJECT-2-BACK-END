@@ -6,11 +6,9 @@ exports.createProduct = async (req, res) => {
     const {
       name,
       price,
-      descriptionFileUrl,
-      information,
+      description,
       imageUrls,
       variants,
-      attributes,
       categoryId,
       brandId,
     } = req.body;
@@ -19,11 +17,9 @@ exports.createProduct = async (req, res) => {
       sellerId: req.user.id,
       name,
       price,
-      descriptionFileUrl,
-      information,
+      description,
       imageUrls,
       variants,
-      attributes,
       categoryId,
       brandId,
     });
@@ -37,26 +33,19 @@ exports.createProduct = async (req, res) => {
 // Get all products
 exports.getAllProducts = async (req, res) => {
   try {
-    // Determine the user's role from the request object
-    const userRole = req.user ? req.user.role : "guest"; // Default to "guest" if no user is logged in
+    const userRole = req.user ? req.user.role : "guest";
 
-    // Set query based on user role
     let query = {};
     if (userRole === "admin" || userRole === "seller") {
-      // Admins and sellers can see both approved and pending products
-      query = { "verify.status": { $in: ["approved", "pending"] } }; // Show both approved and pending
+      query = { "verify.status": { $in: ["approved", "pending"] } };
     } else {
-      // Everyone else can only see approved products
       query = { "verify.status": "approved" };
     }
 
-    // Fetch products based on the query
     const products = await productService.getAllProducts(query);
 
-    // Return the products to the client
     res.status(200).json(products);
   } catch (err) {
-    // Handle errors and return a meaningful message
     res.status(500).json({ error: err.message });
   }
 };
@@ -89,15 +78,25 @@ exports.deleteProduct = async (req, res) => {
     await productService.deleteProduct(req.params.id, req.user.id);
     res.status(200).json({ message: "Product deleted successfully" });
   } catch (err) {
-    res.status(403).json({ error: err.message }); // Use 403 Forbidden if the user is not authorized
+    res.status(403).json({ error: err.message });
   }
 };
 
-// Verify product
 exports.getProductsByStatus = async (req, res) => {
   try {
     const { status } = req.query;
     const products = await productService.getProductsByStatus(status);
+    res.status(200).json(products);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+// Get Products by Seller ID
+exports.getProductsBySellerId = async (req, res) => {
+  try {
+    const { sellerId } = req.params; // Extract sellerId from the route parameter
+    const products = await productService.getProductsBySellerId(sellerId);
     res.status(200).json(products);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -109,19 +108,17 @@ exports.updateProductVerify = async (req, res) => {
     const { id } = req.params;
     const { status, reason, description } = req.body;
 
-    const product = await productService.updateProductVerify(
-      id,
+    const product = await productService.updateProductVerify(id, {
       status,
       reason,
-      description
-    );
+      description,
+    });
     res.status(200).json(product);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 };
 
-// Report product
 exports.reportProduct = async (req, res) => {
   try {
     const { id } = req.params;

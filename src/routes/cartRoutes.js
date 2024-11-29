@@ -341,7 +341,7 @@ router.post("/vnpay-checkout", verifyToken, async function (req, res, next) {
  *       400:
  *         description: Invalid signature or cart is empty
  */
-router.get("/vnpay-success", verifyToken, async function (req, res, next) {
+router.get("/vnpay_success", verifyToken, async function (req, res, next) {
   const userId = req.user ? req.user.id : null; // Get user ID from token
   let vnp_Params = req.query;
   let secureHash = vnp_Params["vnp_SecureHash"];
