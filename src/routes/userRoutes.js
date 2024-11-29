@@ -340,4 +340,55 @@ router.post("/users/logout", verifyToken, (req, res) => {
   res.status(200).json({ message: "Logout successful" });
 });
 
+/**
+ * @swagger
+ * /admin/update-user:
+ *   put:
+ *     summary: Admin updates user details
+ *     description: Admin can update any user's details such as name, phone, address, etc.
+ *     tags:
+ *       - Users
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 description: The ID of the user to be updated
+ *               fullName:
+ *                 type: string
+ *               dateOfBirth:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               address:
+ *                 type: string
+ *               gender:
+ *                 type: string
+ *               imageUrl:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successfully updated user details
+ *       403:
+ *         description: Forbidden, only admin can update
+ *       404:
+ *         description: User not found
+ *       400:
+ *         description: Bad request or validation error
+ *       500:
+ *         description: Internal server error
+ */
+router.patch(
+  "/admin/update-user",
+  verifyToken,
+  authorizeRole("admin"),
+  userController.adminUpdateUser
+);
+
 module.exports = router;
