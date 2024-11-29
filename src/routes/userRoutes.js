@@ -1,8 +1,8 @@
-const express = require('express');
-const userController = require('../controllers/usersController');
+const express = require("express");
+const userController = require("../controllers/usersController");
 const router = express.Router();
-const { verifyToken, addToBlacklist } = require('../middleware/authMiddleware');
-const authorizeRole = require('../middleware/roleMiddleware');
+const { verifyToken, addToBlacklist } = require("../middleware/authMiddleware");
+const authorizeRole = require("../middleware/roleMiddleware");
 
 /**
  * @swagger
@@ -32,9 +32,9 @@ const authorizeRole = require('../middleware/roleMiddleware');
  *         description: Bad request or server error
  */
 router.get(
-  '/users',
+  "/users",
   verifyToken,
-  authorizeRole('admin'),
+  authorizeRole("admin"),
   userController.getAllUsers
 );
 
@@ -63,7 +63,7 @@ router.get(
  *       400:
  *         description: Bad request or server error
  */
-router.get('/users/:id', verifyToken, userController.getUser);
+router.get("/users/:id", verifyToken, userController.getUser);
 
 /**
  * @swagger
@@ -114,7 +114,7 @@ router.get('/users/:id', verifyToken, userController.getUser);
  *       500:
  *         description: Internal server error
  */
-router.put('/users/:id', verifyToken, userController.updateUser);
+router.patch("/users/:id", verifyToken, userController.updateUser);
 
 /**
  * @swagger
@@ -141,7 +141,7 @@ router.put('/users/:id', verifyToken, userController.updateUser);
  *       400:
  *         description: Bad request or server error
  */
-router.delete('/users/:id', verifyToken, userController.deleteUser);
+router.delete("/users/:id", verifyToken, userController.deleteUser);
 
 /**
  * @swagger
@@ -166,7 +166,7 @@ router.delete('/users/:id', verifyToken, userController.deleteUser);
  *       400:
  *         description: Invalid email or error occurred
  */
-router.post('/users/forgot-password', userController.forgotPassword);
+router.post("/users/forgot-password", userController.forgotPassword);
 
 /**
  * @swagger
@@ -193,7 +193,7 @@ router.post('/users/forgot-password', userController.forgotPassword);
  *       400:
  *         description: Invalid token or validation error
  */
-router.post('/users/reset-password', userController.resetPassword);
+router.post("/users/reset-password", userController.resetPassword);
 
 /**
  * @swagger
@@ -220,7 +220,7 @@ router.post('/users/reset-password', userController.resetPassword);
  *       403:
  *         description: Forbidden, invalid refresh token
  */
-router.post('/users/refresh-token', userController.refreshToken);
+router.post("/users/refresh-token", userController.refreshToken);
 
 /**
  * @swagger
@@ -252,9 +252,9 @@ router.post('/users/refresh-token', userController.refreshToken);
  *         description: Invalid input or server error
  */
 router.post(
-  '/admin/ban-user',
+  "/admin/ban-user",
   verifyToken,
-  authorizeRole('admin'),
+  authorizeRole("admin"),
   userController.banUser
 );
 
@@ -282,9 +282,9 @@ router.post(
  *         description: Error retrieving report flags
  */
 router.get(
-  '/admin/report/:id',
+  "/admin/report/:id",
   verifyToken,
-  authorizeRole('admin'),
+  authorizeRole("admin"),
   userController.getUserReportFlags
 );
 
@@ -312,9 +312,9 @@ router.get(
  *         description: Error deleting report
  */
 router.delete(
-  '/admin/report/:id',
+  "/admin/report/:id",
   verifyToken,
-  authorizeRole('admin'),
+  authorizeRole("admin"),
   userController.deleteReportById
 );
 
@@ -334,10 +334,10 @@ router.delete(
  *       400:
  *         description: Error during logout
  */
-router.post('/users/logout', verifyToken, (req, res) => {
-  const token = req.headers.authorization.split('Bearer ')[1];
+router.post("/users/logout", verifyToken, (req, res) => {
+  const token = req.headers.authorization.split("Bearer ")[1];
   addToBlacklist(token);
-  res.status(200).json({ message: 'Logout successful' });
+  res.status(200).json({ message: "Logout successful" });
 });
 
 module.exports = router;
