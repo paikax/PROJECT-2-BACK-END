@@ -1,5 +1,10 @@
 const mongoose = require("mongoose");
 
+// Utility function to count words in a string
+function wordCount(value) {
+  return value.split(/\s+/).length;
+}
+
 const productSchema = new mongoose.Schema({
   sellerId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -15,11 +20,16 @@ const productSchema = new mongoose.Schema({
     required: true,
     min: 0,
   },
-  descriptionFileUrl: {
+  description: {
     type: String,
     required: true,
+    validate: {
+      validator: function (value) {
+        return wordCount(value) <= 500; // Limit description to 500 words
+      },
+      message: "Description cannot exceed 500 words.",
+    },
   },
-  information: {}, // Flexible for additional information
   imageUrls: [
     {
       type: String,
@@ -52,20 +62,6 @@ const productSchema = new mongoose.Schema({
       },
     },
   ],
-  attributes: {
-    option: [
-      {
-        type: String,
-        required: true,
-      },
-    ],
-    color: [
-      {
-        type: String,
-        required: true,
-      },
-    ],
-  },
   rating: {
     type: Number,
     default: 0,
@@ -106,5 +102,10 @@ const productSchema = new mongoose.Schema({
     default: null,
   },
 });
+
+// Add custom validation for imageUrls to limit the array to 5 items
+productSchema.path("imageUrls").validate(function (value) {
+  return value.length <= 5;
+}, "You can only upload a maximum of 5 images.");
 
 module.exports = mongoose.model("Product", productSchema);

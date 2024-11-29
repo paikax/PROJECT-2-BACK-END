@@ -1,31 +1,25 @@
 const Product = require("../models/Product");
-const ProductReport = require("../models/ProductReport"); // Import the new ProductReport model
+const ProductReport = require("../models/ProductReport");
 const User = require("../models/User");
 
 exports.createProduct = async ({
   sellerId,
   name,
   price,
-  descriptionFileUrl,
-  information,
+  description,
   imageUrls,
   variants,
-  attributes,
   categoryId,
-  views = 0,
   brandId,
 }) => {
   const product = new Product({
     sellerId,
     name,
     price,
-    descriptionFileUrl,
-    information,
+    description,
     imageUrls,
     variants,
-    attributes,
     categoryId,
-    views,
     brandId,
   });
 
@@ -36,11 +30,23 @@ exports.createProduct = async ({
 exports.getAllProducts = async (query) => {
   try {
     return await Product.find(query)
-      .populate("sellerId", "fullName") // Populate seller details
-      .populate("categoryId", "name") // Populate category details
-      .populate("brandId", "name"); // Populate brand details
+      .populate("sellerId", "fullName")
+      .populate("categoryId", "name")
+      .populate("brandId", "name");
   } catch (err) {
     throw new Error("Failed to retrieve products");
+  }
+};
+
+// Get Products by Seller ID
+exports.getProductsBySellerId = async (sellerId) => {
+  try {
+    const products = await Product.find({ sellerId })
+      .populate("categoryId", "name")
+      .populate("brandId", "name");
+    return products;
+  } catch (err) {
+    throw new Error("Failed to retrieve products for the seller");
   }
 };
 
@@ -49,7 +55,7 @@ exports.getProductById = async (id) => {
   const product = await Product.findById(id)
     .populate("sellerId", "fullName")
     .populate("categoryId", "name")
-    .populate("brandId", "name"); // Populate brand details
+    .populate("brandId", "name");
 
   if (!product) {
     throw new Error("Product not found");
@@ -66,15 +72,9 @@ exports.updateProduct = async (id, updates) => {
   const product = await Product.findById(id);
   if (!product) throw new Error("Product not found");
 
-  // Update all fields dynamically
   Object.assign(product, updates);
 
-  // Update brandId explicitly if provided
-  if (updates.brandId) {
-    product.brandId = updates.brandId;
-  }
-
-  // Update variants if provided
+  // Update nested fields like variants explicitly, if provided
   if (updates.variants) {
     product.variants = updates.variants.map((variant, index) => {
       const existingVariant = product.variants[index] || {};
@@ -93,7 +93,6 @@ exports.deleteProduct = async (id, userId) => {
     throw new Error("Product not found");
   }
 
-  // Verify if the user is the owner
   if (product.sellerId.toString() !== userId) {
     throw new Error("You are not authorized to delete this product");
   }
@@ -143,7 +142,6 @@ exports.addProductReport = async (productId, userId, reason) => {
   });
   await report.save();
 
-  // Increment seller's report flags
   const seller = await User.findById(product.sellerId);
   if (seller) {
     seller.reportFlags = (seller.reportFlags || 0) + 1;
@@ -161,7 +159,6 @@ exports.deleteReportById = async (reportId) => {
   const product = report.product;
   if (!product) throw new Error("Product not found for this report");
 
-  // Decrement seller's report flags
   const seller = await User.findById(product.sellerId);
   if (seller) {
     seller.reportFlags = Math.max(0, (seller.reportFlags || 0) - 1);
