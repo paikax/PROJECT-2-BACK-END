@@ -1,7 +1,10 @@
 const userService = require("../services/userService");
 const productService = require("../services/productService");
 const jwt = require("jsonwebtoken");
-const { addToBlacklist, removeFromBlacklist } = require("../middleware/authMiddleware");
+const {
+  addToBlacklist,
+  removeFromBlacklist,
+} = require("../middleware/authMiddleware");
 
 // Get all users (for admin only, maybe add role checking in the future)
 exports.getAllUsers = async (req, res) => {
@@ -36,6 +39,7 @@ exports.updateUser = async (req, res) => {
     address,
     gender,
     imageUrl,
+    fullName,
   } = req.body;
 
   try {
@@ -59,6 +63,7 @@ exports.updateUser = async (req, res) => {
       address: address || user.address,
       gender: gender || user.gender,
       imageUrl: imageUrl || user.imageUrl,
+      fullName: fullName || user.fullName, 
     };
 
     Object.assign(user, updatedFields);
