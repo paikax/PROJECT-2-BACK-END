@@ -145,20 +145,22 @@ exports.banUser = async (req, res) => {
   }
 
   try {
-    // Call the service to update the ban status
+    // Call the service to update the ban status for the target user
     const updatedUser = await userService.setBanStatus(userId, isBanned);
 
     if (!updatedUser) {
       return res.status(404).json({ error: "User not found." });
     }
 
-    const token = req.headers.authorization.split("Bearer ")[1];
+    // If banning another user, only blacklist their token(s), not the current user's
     if (isBanned) {
-      // If the user is banned, add the token to the blacklist
-      addToBlacklist(token);
+      // Fetch the target user's token (if stored in DB, for example)
+      const userTokens = await userService.getUserTokens(userId); // Assume you have a service to get user tokens
+      userTokens.forEach((token) => addToBlacklist(token));
     } else {
-      // If the user is unbanned, remove the token from the blacklist
-      removeFromBlacklist(token);
+      // If unbanning, remove their tokens from the blacklist
+      const userTokens = await userService.getUserTokens(userId);
+      userTokens.forEach((token) => removeFromBlacklist(token));
     }
 
     res.status(200).json({
