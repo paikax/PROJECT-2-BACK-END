@@ -175,7 +175,7 @@ exports.banUser = async (req, res) => {
 };
 
 exports.getUserReportFlags = async (req, res) => {
-  const userId = req.params.id; // Assuming the user ID is passed in the route
+  const userId = req.params.id; 
 
   try {
     const reportDetails = await userService.getUserReportFlags(userId);
