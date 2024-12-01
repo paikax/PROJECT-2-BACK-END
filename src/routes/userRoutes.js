@@ -1,14 +1,14 @@
 const express = require('express');
 const userController = require('../controllers/usersController');
 const router = express.Router();
-const {verifyToken, addToBlacklist} = require('../middleware/authMiddleware');
+const { verifyToken, addToBlacklist } = require('../middleware/authMiddleware');
 const authorizeRole = require('../middleware/roleMiddleware');
 
 /**
  * @swagger
  * tags:
  *   name: Users
- *   description: API for managing categories
+ *   description: API for managing users
  */
 
 /**
@@ -31,12 +31,13 @@ const authorizeRole = require('../middleware/roleMiddleware');
  *       400:
  *         description: Bad request or server error
  */
-router.get('/users',
-    verifyToken,
-    authorizeRole("admin"),
-    userController.getAllUsers);
+router.get(
+  '/users',
+  verifyToken,
+  authorizeRole('admin'),
+  userController.getAllUsers
+);
 
-// Get single user
 /**
  * @swagger
  * /users/{id}:
@@ -45,6 +46,8 @@ router.get('/users',
  *     description: Retrieve a single user's details by their ID.
  *     tags:
  *       - Users
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -60,9 +63,8 @@ router.get('/users',
  *       400:
  *         description: Bad request or server error
  */
-router.get('/users:id', verifyToken, userController.getUser);
+router.get('/users/:id', verifyToken, userController.getUser);
 
-// Update user
 /**
  * @swagger
  * /users/{id}:
@@ -71,6 +73,8 @@ router.get('/users:id', verifyToken, userController.getUser);
  *     description: Update the user details such as phone, address, and password.
  *     tags:
  *       - Users
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -112,7 +116,6 @@ router.get('/users:id', verifyToken, userController.getUser);
  */
 router.put('/users/:id', verifyToken, userController.updateUser);
 
-// Delete user
 /**
  * @swagger
  * /users/{id}:
@@ -121,6 +124,8 @@ router.put('/users/:id', verifyToken, userController.updateUser);
  *     description: Delete a user from the system by their ID.
  *     tags:
  *       - Users
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -138,7 +143,6 @@ router.put('/users/:id', verifyToken, userController.updateUser);
  */
 router.delete('/users/:id', verifyToken, userController.deleteUser);
 
-// Request password reset
 /**
  * @swagger
  * /users/forgot-password:
@@ -164,7 +168,6 @@ router.delete('/users/:id', verifyToken, userController.deleteUser);
  */
 router.post('/users/forgot-password', userController.forgotPassword);
 
-// Reset password
 /**
  * @swagger
  * /users/reset-password:
@@ -192,7 +195,6 @@ router.post('/users/forgot-password', userController.forgotPassword);
  */
 router.post('/users/reset-password', userController.resetPassword);
 
-// Refresh token
 /**
  * @swagger
  * /users/refresh-token:
@@ -220,7 +222,6 @@ router.post('/users/reset-password', userController.resetPassword);
  */
 router.post('/users/refresh-token', userController.refreshToken);
 
-// ban user
 /**
  * @swagger
  * /admin/ban-user:
@@ -229,19 +230,21 @@ router.post('/users/refresh-token', userController.refreshToken);
  *     description: Ban or unban a user by their ID.
  *     tags:
  *       - Users
- *     parameters:
- *       - name: userId
- *         in: body
- *         required: true
- *         description: The ID of the user to ban or unban
- *         schema:
- *           type: string
- *       - name: isBanned
- *         in: body
- *         required: true
- *         description: Boolean value indicating whether to ban or unban the user
- *         schema:
- *           type: boolean
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 description: The ID of the user to ban or unban
+ *               isBanned:
+ *                 type: boolean
+ *                 description: Boolean indicating whether to ban or unban the user
  *     responses:
  *       200:
  *         description: Successfully banned or unbanned the user
@@ -249,14 +252,12 @@ router.post('/users/refresh-token', userController.refreshToken);
  *         description: Invalid input or server error
  */
 router.post(
-    '/admin/ban-user',
-    verifyToken,
-    authorizeRole("admin"),
-    userController.banUser
-  );
+  '/admin/ban-user',
+  verifyToken,
+  authorizeRole('admin'),
+  userController.banUser
+);
 
-
-// show the report of that user
 /**
  * @swagger
  * /admin/report/{id}:
@@ -265,6 +266,8 @@ router.post(
  *     description: Get all report flags for a specific user.
  *     tags:
  *       - Users
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -278,10 +281,12 @@ router.post(
  *       400:
  *         description: Error retrieving report flags
  */
-router.get('/admin/report/:id', verifyToken, 
-    authorizeRole("admin"), 
-    userController.getUserReportFlags);
-    // delete report by id
+router.get(
+  '/admin/report/:id',
+  verifyToken,
+  authorizeRole('admin'),
+  userController.getUserReportFlags
+);
 
 /**
  * @swagger
@@ -291,6 +296,8 @@ router.get('/admin/report/:id', verifyToken,
  *     description: Delete a specific user report by its ID.
  *     tags:
  *       - Users
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -304,10 +311,12 @@ router.get('/admin/report/:id', verifyToken,
  *       400:
  *         description: Error deleting report
  */
-router.delete('/admin/report/:id', verifyToken, 
-        authorizeRole("admin"),
-        userController.deleteReportById);
-
+router.delete(
+  '/admin/report/:id',
+  verifyToken,
+  authorizeRole('admin'),
+  userController.deleteReportById
+);
 
 /**
  * @swagger
@@ -317,6 +326,8 @@ router.delete('/admin/report/:id', verifyToken,
  *     description: Logs out a user and invalidates the current JWT token by adding it to the blacklist.
  *     tags:
  *       - Users
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Successfully logged out
@@ -324,10 +335,9 @@ router.delete('/admin/report/:id', verifyToken,
  *         description: Error during logout
  */
 router.post('/users/logout', verifyToken, (req, res) => {
-    const token = req.headers.authorization.split('Bearer ')[1];
-    addToBlacklist(token);
-    res.status(200).json({ message: 'Logout successful' });
-});        
-
+  const token = req.headers.authorization.split('Bearer ')[1];
+  addToBlacklist(token);
+  res.status(200).json({ message: 'Logout successful' });
+});
 
 module.exports = router;

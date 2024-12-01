@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const branchSchema = new mongoose.Schema({
+const brandSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -15,4 +15,4 @@ const branchSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('Branch', branchSchema);
+module.exports = mongoose.model('Brand', brandSchema);

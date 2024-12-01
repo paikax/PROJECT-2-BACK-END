@@ -1,18 +1,34 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
+
+// Utility function to count words in a string
+function wordCount(value) {
+  return value.split(/\s+/).length;
+}
 
 const productSchema = new mongoose.Schema({
+  sellerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   name: {
     type: String,
     required: true,
   },
+  price: {
+    type: String,
+    required: true,
+    min: 0,
+  },
   description: {
     type: String,
     required: true,
-  },
-  price: {
-    type: Number,
-    required: true,
-    min: 0,
+    validate: {
+      validator: function (value) {
+        return wordCount(value) <= 500; // Limit description to 500 words
+      },
+      message: "Description cannot exceed 500 words.",
+    },
   },
   imageUrls: [
     {
@@ -30,32 +46,20 @@ const productSchema = new mongoose.Schema({
   },
   variants: [
     {
-      name: {
+      price: {
         type: String,
-        required: true,
-      },
-      stockQuantity: {
-        type: Number,
         required: true,
         min: 0,
       },
-      additionalData: {
-        type: String, // New field for additional data
-      },
-    },
-  ],
-  attributes: [
-    {
-      name: {
+      stockQuantity: {
         type: String,
         required: true,
+        min: 0,
       },
-      value: [
-        {
-          type: String,
-          required: true,
-        },
-      ],
+      attributes: {
+        option: { type: String, required: true }, // Example: "16gb-256gb"
+        color: { type: String, required: true }, // Example: "black" or "white"
+      },
     },
   ],
   rating: {
@@ -67,12 +71,12 @@ const productSchema = new mongoose.Schema({
   verify: {
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected'],
-      default: 'pending',
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
     },
     description: {
       type: String,
-      default: 'This product is under review. Please wait...',
+      default: "This product is under review. Please wait...",
     },
     reason: {
       type: String,
@@ -80,25 +84,28 @@ const productSchema = new mongoose.Schema({
   },
   views: {
     type: Number,
+    default: 0,
     min: 0,
   },
-  seller: {
+  categoryId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: "Category",
     required: true,
   },
-  category: {
+  brandId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category',
+    ref: "Brand",
     required: true,
   },
-  branch: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Branch',
-    required: true,
-  },
-  information: {
+  reportId: {
+    type: String,
+    default: null,
   },
 });
 
-module.exports = mongoose.model('Product', productSchema);
+// Add custom validation for imageUrls to limit the array to 5 items
+productSchema.path("imageUrls").validate(function (value) {
+  return value.length <= 5;
+}, "You can only upload a maximum of 5 images.");
+
+module.exports = mongoose.model("Product", productSchema);

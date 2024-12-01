@@ -1,35 +1,52 @@
-const productService = require('../services/productService');
-const ProductReport = require('../models/ProductReport'); // Import ProductReport model
-const User = require('../models/User');
+const productService = require("../services/productService");
 
+// Create Product
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, imageUrls, variants, attributes, views, branchId, information } = req.body;
-    const product = await productService.createProduct(
+    const {
       name,
-      description,
       price,
+      description,
       imageUrls,
       variants,
-      attributes,
-      req.user.id,
-      req.body.categoryId,
-      views,
-      branchId, // Pass branchId to the service layer
-      information
-    );
+      categoryId,
+      brandId,
+    } = req.body;
+
+    const product = await productService.createProduct({
+      sellerId: req.user.id,
+      name,
+      price,
+      description,
+      imageUrls,
+      variants,
+      categoryId,
+      brandId,
+    });
+
     res.status(201).json(product);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 };
 
+// Get all products
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await productService.getAllProducts();
+    const userRole = req.user ? req.user.role : "guest";
+
+    let query = {};
+    if (userRole === "admin" || userRole === "seller") {
+      query = { "verify.status": { $in: ["approved", "pending"] } };
+    } else {
+      query = { "verify.status": "approved" };
+    }
+
+    const products = await productService.getAllProducts(query);
+
     res.status(200).json(products);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -42,19 +59,14 @@ exports.getProduct = async (req, res) => {
   }
 };
 
+// Update Product
 exports.updateProduct = async (req, res) => {
   try {
-    const { name, description, price, imageUrls, variants, attributes, categoryId, branchId } = req.body;
-    const product = await productService.updateProduct(req.params.id, { 
-      name, 
-      description, 
-      price, 
-      imageUrls, 
-      variants, 
-      attributes, 
-      category: categoryId, 
-      branchId // Pass branchId to the service layer
-    });
+    const updates = {
+      ...req.body,
+      updatedAt: new Date(),
+    };
+    const product = await productService.updateProduct(req.params.id, updates);
     res.status(200).json(product);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -64,17 +76,27 @@ exports.updateProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     await productService.deleteProduct(req.params.id, req.user.id);
-    res.status(200).json({ message: 'Product deleted successfully' });
+    res.status(200).json({ message: "Product deleted successfully" });
   } catch (err) {
-    res.status(403).json({ error: err.message }); // Use 403 Forbidden if the user is not authorized
+    res.status(403).json({ error: err.message });
   }
 };
 
-// Verify product
 exports.getProductsByStatus = async (req, res) => {
   try {
     const { status } = req.query;
     const products = await productService.getProductsByStatus(status);
+    res.status(200).json(products);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+// Get Products by Seller ID
+exports.getProductsBySellerId = async (req, res) => {
+  try {
+    const { sellerId } = req.params; // Extract sellerId from the route parameter
+    const products = await productService.getProductsBySellerId(sellerId);
     res.status(200).json(products);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -86,14 +108,17 @@ exports.updateProductVerify = async (req, res) => {
     const { id } = req.params;
     const { status, reason, description } = req.body;
 
-    const product = await productService.updateProductVerify(id, status, reason, description);
+    const product = await productService.updateProductVerify(id, {
+      status,
+      reason,
+      description,
+    });
     res.status(200).json(product);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 };
 
-// Report product
 exports.reportProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -102,7 +127,7 @@ exports.reportProduct = async (req, res) => {
 
     const report = await productService.addProductReport(id, userId, reason);
 
-    res.status(200).json({ message: 'Product reported successfully.', report });
+    res.status(200).json({ message: "Product reported successfully.", report });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

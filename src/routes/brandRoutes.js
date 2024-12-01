@@ -1,25 +1,25 @@
 const express = require('express');
-const branchController = require('../controllers/branchController');
+const brandController = require('../controllers/brandController');
 const { verifyToken } = require('../middleware/authMiddleware');
 const authorizeRole = require('../middleware/roleMiddleware');
 
 const router = express.Router();
 
-// Routes for Branch CRUD
+// Routes for brand CRUD
 /**
  * @swagger
  * tags:
- *   name: Branches
- *   description: API for managing branches
+ *   name: brands
+ *   description: API for managing brands
  */
 
-// Create a branch (only sellers and admins can create)
+// Create a brand (only sellers and admins can create)
 /**
  * @swagger
- * /branches:
+ * /brands:
  *   post:
- *     summary: Create a new branch
- *     tags: [Branches]
+ *     summary: Create a new brand
+ *     tags: [brands]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -31,96 +31,96 @@ const router = express.Router();
  *             properties:
  *               name:
  *                 type: string
- *                 description: Name of the branch
- *                 example: Electronics Branch
+ *                 description: Name of the brand
+ *                 example: Electronics brand
  *               description:
  *                 type: string
- *                 description: Description of the branch
- *                 example: This branch specializes in electronic products.
+ *                 description: Description of the brand
+ *                 example: This brand specializes in electronic products.
  *               imageUrl:
  *                 type: string
- *                 description: URL of the branch's image
+ *                 description: URL of the brand's image
  *                 example: https://example.com/image.jpg
  *     responses:
  *       201:
- *         description: Branch created successfully
+ *         description: brand created successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Branch'
+ *               $ref: '#/components/schemas/brand'
  *       400:
  *         description: Bad request
  */
 router.post(
-  '/branches',
+  '/brands',
   verifyToken,
-  authorizeRole('seller', 'admin'), // Only sellers and admins can create branches
-  branchController.createBranch
+  authorizeRole('seller', 'admin'), // Only sellers and admins can create brands
+  brandController.createBrand
 );
 
-// Get all branches (accessible to everyone)
+// Get all brands (accessible to everyone)
 /**
  * @swagger
- * /branches:
+ * /brands:
  *   get:
- *     summary: Retrieve all branches
- *     tags: [Branches]
+ *     summary: Retrieve all brands
+ *     tags: [brands]
  *     responses:
  *       200:
- *         description: List of all branches
+ *         description: List of all brands
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Branch'
+ *                 $ref: '#/components/schemas/brand'
  *       400:
  *         description: Bad request
  */
-router.get('/branches', branchController.getAllBranches);
+router.get('/brands', brandController.getAllBrands);
 
-// Get single branch by ID (accessible to everyone)
+// Get single brand by ID (accessible to everyone)
 /**
  * @swagger
- * /branches/{id}:
+ * /brands/{id}:
  *   get:
- *     summary: Retrieve a branch by ID
- *     tags: [Branches]
+ *     summary: Retrieve a brand by ID
+ *     tags: [brands]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: ID of the branch to retrieve
+ *         description: ID of the brand to retrieve
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: Branch retrieved successfully
+ *         description: brand retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Branch'
+ *               $ref: '#/components/schemas/brand'
  *       400:
  *         description: Bad request
  *       404:
- *         description: Branch not found
+ *         description: brand not found
  */
-router.get('/branches/:id', branchController.getBranchById);
+router.get('/brands/:id', brandController.getBrandById);
 
-// Update a branch (only sellers and admins can update)
+// Update a brand (only sellers and admins can update)
 /**
  * @swagger
- * /branches/{id}:
+ * /brands/{id}:
  *   put:
- *     summary: Update a branch by ID
- *     tags: [Branches]
+ *     summary: Update a brand by ID
+ *     tags: [brands]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: ID of the branch to update
+ *         description: ID of the brand to update
  *         schema:
  *           type: string
  *     requestBody:
@@ -132,54 +132,54 @@ router.get('/branches/:id', branchController.getBranchById);
  *             properties:
  *               name:
  *                 type: string
- *                 description: Updated name of the branch
- *                 example: Updated Electronics Branch
+ *                 description: Updated name of the brand
+ *                 example: Updated Electronics brand
  *               description:
  *                 type: string
- *                 description: Updated description of the branch
- *                 example: Updated branch description.
+ *                 description: Updated description of the brand
+ *                 example: Updated brand description.
  *               imageUrl:
  *                 type: string
- *                 description: Updated URL of the branch's image
+ *                 description: Updated URL of the brand's image
  *                 example: https://example.com/updated-image.jpg
  *     responses:
  *       200:
- *         description: Branch updated successfully
+ *         description: brand updated successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Branch'
+ *               $ref: '#/components/schemas/brand'
  *       400:
  *         description: Bad request
  *       404:
- *         description: Branch not found
+ *         description: brand not found
  */
 router.put(
-  '/branches/:id',
+  '/brands/:id',
   verifyToken,
-  authorizeRole('seller', 'admin'), // Only sellers and admins can update branches
-  branchController.updateBranch
+  authorizeRole('seller', 'admin'), // Only sellers and admins can update brands
+  brandController.updateBrand
 );
 
-// Delete a branch (only admins can delete)
+// Delete a brand (only admins can delete)
 /**
  * @swagger
- * /branches/{id}:
+ * /brands/{id}:
  *   delete:
- *     summary: Delete a branch by ID
- *     tags: [Branches]
+ *     summary: Delete a brand by ID
+ *     tags: [brands]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: ID of the branch to delete
+ *         description: ID of the brand to delete
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: Branch deleted successfully
+ *         description: brand deleted successfully
  *         content:
  *           application/json:
  *             schema:
@@ -188,17 +188,17 @@ router.put(
  *                 message:
  *                   type: string
  *                   description: Confirmation message
- *                   example: Branch deleted successfully
+ *                   example: brand deleted successfully
  *       400:
  *         description: Bad request
  *       404:
- *         description: Branch not found
+ *         description: brand not found
  */
 router.delete(
-  '/branches/:id',
+  '/brands/:id',
   verifyToken,
-  authorizeRole('seller','admin'), // Only admins can delete branches
-  branchController.deleteBranch
+  authorizeRole('seller','admin'), // Only admins can delete brands
+  brandController.deleteBrand
 );
 
 module.exports = router;
