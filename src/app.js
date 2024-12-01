@@ -42,7 +42,6 @@ app.use(
 );
 
 app.use(rateLimiter);
-
 // Add Swagger UI route
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs)); // Swagger documentation route
 
