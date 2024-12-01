@@ -152,21 +152,9 @@ exports.banUser = async (req, res) => {
       return res.status(404).json({ error: "User not found." });
     }
 
-    // const token = req.headers.authorization.split("Bearer ")[1];
-
-    // Check if the admin is banning themselves
     if (userId === req.user.id) {
       return res.status(400).json({ error: "Admins cannot ban themselves." });
     }
-
-    // // Only blacklist the token if the user being banned is not the admin
-    // if (isBanned === true) {
-    //   // If the user is banned, add the token to the blacklist (but not for the admin)
-    //   addToBlacklist(token);
-    // } else {
-    //   // If the user is unbanned, remove the token from the blacklist
-    //   removeFromBlacklist(token);
-    // }
 
     res.status(200).json({
       message: `User has been successfully ${
