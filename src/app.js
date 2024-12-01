@@ -1,28 +1,61 @@
-const express = require('express');
-const compression = require('compression');
-const rateLimiter = require('./middleware/rateLimiter');
-require('./config/db'); // Import the MongoDB connection
-const authRoutes = require('./routes/authRoutes')
-const userRoutes = require('./routes/userRoutes')
-require('dotenv').config({ path: "./../development/.env"});
-const cors = require('cors');
+const express = require("express");
+const compression = require("compression");
+const cors = require("cors");
+const swaggerUi = require("swagger-ui-express"); // Import Swagger UI
+const swaggerSpecs = require("./swaggerConfig"); // Import Swagger Config
+const authRoutes = require("./routes/authRoutes");
+const rateLimiter = require("./middleware/rateLimiter");
+const userRoutes = require("./routes/userRoutes");
+const productRoutes = require("./routes/productRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const brandRoutes = require("./routes/brandRoutes");
+const cartRoutes = require("./routes/cartRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+const paymentController = require("./controllers/paymentController");
+require("../config/db");
+require("dotenv").config({ path: "./../development/.env" });
 
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "https://project-2-back-end.onrender.com",
+  "https://dev-g5.vercel.app",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5173",
+];
 
 const app = express();
 
-app.use(cors({
-    origin: '*', // Allow all origins
-    methods: 'GET,POST,PUT,DELETE', // Specify allowed HTTP methods
-    credentials: false // Set to false since all origins are allowed
-}));
 app.use(express.json());
 app.use(compression());
-app.use(rateLimiter); // Apply rate limiter middleware
 
+// const allowedOrigins = [process.env.CLIENT_URL];
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) callback(null, true);
+      else callback(new Error("Not allowed by CORS"));
+    },
+    methods: "GET,POST,PUT,DELETE,PATCH",
+    credentials: true,
+  })
+);
 
-app.use('/api', userRoutes, authRoutes);
+app.use(rateLimiter);
+// Add Swagger UI route
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs)); // Swagger documentation route
 
+// main routes
+app.use("/api", authRoutes);
+app.use("/api", userRoutes);
+app.use("/api", productRoutes);
+app.use("/api", categoryRoutes);
+app.use("/api", brandRoutes);
+app.use("/api", cartRoutes);
+app.use("/api", paymentRoutes);
 
-
+app.use("/", (req, res) => {
+  res.send("This is DEV-G5 root endpoint^^.");
+});
 
 module.exports = app;
