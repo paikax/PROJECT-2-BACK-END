@@ -152,7 +152,6 @@ exports.banUser = async (req, res) => {
       return res.status(404).json({ error: "User not found." });
     }
 
-    // Check if the admin is banning themselves
     if (userId === req.user.id) {
       return res.status(400).json({ error: "Admins cannot ban themselves." });
     }
