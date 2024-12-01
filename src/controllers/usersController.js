@@ -152,15 +152,9 @@ exports.banUser = async (req, res) => {
       return res.status(404).json({ error: "User not found." });
     }
 
-    // If banning another user, only blacklist their token(s), not the current user's
-    if (isBanned) {
-      // Fetch the target user's token (if stored in DB, for example)
-      const userTokens = await userService.getUserTokens(userId); // Assume you have a service to get user tokens
-      userTokens.forEach((token) => addToBlacklist(token));
-    } else {
-      // If unbanning, remove their tokens from the blacklist
-      const userTokens = await userService.getUserTokens(userId);
-      userTokens.forEach((token) => removeFromBlacklist(token));
+    // Check if the admin is banning themselves
+    if (userId === req.user.id) {
+      return res.status(400).json({ error: "Admins cannot ban themselves." });
     }
 
     res.status(200).json({
@@ -177,7 +171,7 @@ exports.banUser = async (req, res) => {
 };
 
 exports.getUserReportFlags = async (req, res) => {
-  const userId = req.params.id; 
+  const userId = req.params.id;
 
   try {
     const reportDetails = await userService.getUserReportFlags(userId);
