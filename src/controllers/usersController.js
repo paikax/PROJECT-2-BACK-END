@@ -1,7 +1,10 @@
 const userService = require("../services/userService");
 const productService = require("../services/productService");
 const jwt = require("jsonwebtoken");
-const { addToBlacklist, removeFromBlacklist } = require("../middleware/authMiddleware");
+const {
+  addToBlacklist,
+  removeFromBlacklist,
+} = require("../middleware/authMiddleware");
 
 // Get all users (for admin only, maybe add role checking in the future)
 exports.getAllUsers = async (req, res) => {
@@ -147,14 +150,14 @@ exports.banUser = async (req, res) => {
       return res.status(404).json({ error: "User not found." });
     }
 
-    const token = req.headers.authorization.split("Bearer ")[1];
-    if (isBanned) {
-      // If the user is banned, add the token to the blacklist
-      addToBlacklist(token);
-    } else {
-      // If the user is unbanned, remove the token from the blacklist
-      removeFromBlacklist(token);
-    }
+    // const token = req.headers.authorization.split("Bearer ")[1];
+    // if (isBanned) {
+    //   // If the user is banned, add the token to the blacklist
+    //   addToBlacklist(token);
+    // } else {
+    //   // If the user is unbanned, remove the token from the blacklist
+    //   removeFromBlacklist(token);
+    // }
 
     res.status(200).json({
       message: `User has been successfully ${
