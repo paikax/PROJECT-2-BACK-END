@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 const tokenBlacklist = new Set();
 
 const verifyToken = async (req, res, next) => {
