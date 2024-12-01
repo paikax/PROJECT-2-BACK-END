@@ -145,7 +145,7 @@ exports.banUser = async (req, res) => {
   }
 
   try {
-    // Call the service to update the ban status
+    // Call the service to update the ban status for the target user
     const updatedUser = await userService.setBanStatus(userId, isBanned);
 
     if (!updatedUser) {
