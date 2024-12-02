@@ -1,4 +1,5 @@
 const authService = require("../services/authService");
+const jwt = require("jsonwebtoken");
 
 exports.register = async (req, res) => {
   try {
@@ -70,12 +71,31 @@ exports.googleLogin = async (req, res) => {
         return res.status(400).json({ error: "Error registering the user." });
       }
       // User successfully created, login user
-      const token = jwt.sign(
-        { userId: newUser._id, role: newUser.role },
+      const accessToken = jwt.sign(
+        {
+          id: newUser._id,
+          fullName: newUser.fullName,
+          email: newUser.email,
+          phone: newUser.phone,
+          address: newUser.address,
+          gender: newUser.gender,
+          role: newUser.role,
+          imageUrl: newUser.imageUrl,
+        },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "3d" } // Short-lived token
       );
-      return res.status(201).json({ token });
+
+      const refreshToken = jwt.sign(
+        {
+          id: newUser._id,
+          email: newUser.email,
+          role: newUser.role,
+        },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: "7d" } // Long-lived token
+      );
+      return res.status(201).json({ accessToken, refreshToken });
     }
 
     // User exists, log in and return token
