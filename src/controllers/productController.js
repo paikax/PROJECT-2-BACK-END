@@ -8,11 +8,9 @@ exports.createProduct = async (req, res) => {
     const {
       name,
       price,
-      descriptionFileUrl,
-      information,
+      description,
       imageUrls,
       variants,
-      attributes,
       categoryId,
       brandId,
     } = req.body;
@@ -21,11 +19,9 @@ exports.createProduct = async (req, res) => {
       sellerId: req.user.id,
       name,
       price,
-      descriptionFileUrl,
-      information,
+      description,
       imageUrls,
       variants,
-      attributes,
       categoryId,
       brandId,
     });
@@ -90,7 +86,7 @@ exports.deleteProduct = async (req, res) => {
     await productService.deleteProduct(req.params.id, req.user.id);
     res.status(200).json({ message: "Product deleted successfully" });
   } catch (err) {
-    res.status(403).json({ error: err.message }); // Use 403 Forbidden if the user is not authorized
+    res.status(403).json({ error: err.message });
   }
 };
 
@@ -129,8 +125,17 @@ exports.getProductsByStatus = async (req, res) => {
     }
   };
   
-
-// Report product
+// Get Products by Seller ID
+exports.getProductsBySellerId = async (req, res) => {
+    try {
+      const { sellerId } = req.params; // Extract sellerId from the route parameter
+      const products = await productService.getProductsBySellerId(sellerId);
+      res.status(200).json(products);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  };
+  
 exports.reportProduct = async (req, res) => {
   try {
     const { id } = req.params;

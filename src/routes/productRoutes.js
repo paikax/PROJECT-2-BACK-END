@@ -30,16 +30,24 @@ const router = express.Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - description
+ *               - price
+ *               - imageUrls
+ *               - categoryId
+ *               - brandId
  *             properties:
  *               name:
  *                 type: string
  *                 description: Name of the product
- *               descriptionFileUrl:
+ *               description:
  *                 type: string
- *                 description: URL of the product description file
+ *                 description: Description of the product
  *               price:
  *                 type: number
  *                 description: Price of the product
+ *                 example: 199.99
  *               imageUrls:
  *                 type: array
  *                 items:
@@ -53,29 +61,32 @@ const router = express.Router();
  *                   properties:
  *                     price:
  *                       type: number
+ *                       description: Price of the variant
  *                     stockQuantity:
  *                       type: number
- *               attributes:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     value:
- *                       type: array
- *                       items:
- *                         type: string
+ *                       description: Stock quantity of the variant
+ *                     attributes:
+ *                       type: object
+ *                       properties:
+ *                         option:
+ *                           type: string
+ *                           description: Variant option (e.g., "16gb-256gb")
+ *                         color:
+ *                           type: string
+ *                           description: Variant color (e.g., "black" or "white")
  *               categoryId:
  *                 type: string
- *                 description: Category ID
+ *                 description: ID of the category the product belongs to
  *               brandId:
  *                 type: string
- *                 description: Brand ID
- *               information:
- *                 type: object
- *                 description: Additional product information
+ *                 description: ID of the brand the product belongs to
  *     responses:
  *       201:
  *         description: Product created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
  *       400:
  *         description: Bad request
  */
@@ -140,6 +151,10 @@ router.get("/products", verifyToken, paginationMiddleware, filterByRole, filterP
  *     responses:
  *       200:
  *         description: Product retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
  *       400:
  *         description: Bad request
  *       404:
@@ -172,7 +187,7 @@ router.get("/products/:id", productController.getProduct);
  *             properties:
  *               name:
  *                 type: string
- *               descriptionFileUrl:
+ *               description:
  *                 type: string
  *               price:
  *                 type: number
@@ -186,6 +201,10 @@ router.get("/products/:id", productController.getProduct);
  *     responses:
  *       200:
  *         description: Product updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
  *       400:
  *         description: Bad request
  *       404:
@@ -286,6 +305,12 @@ router.post(
  *     responses:
  *       200:
  *         description: Products filtered by status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Product'
  *       400:
  *         description: Bad request
  */
@@ -329,6 +354,10 @@ router.get(
  *     responses:
  *       200:
  *         description: Verification status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
  *       400:
  *         description: Bad request
  *       404:
@@ -340,5 +369,39 @@ router.patch(
     authorizeRole("admin"),
     productController.updateProductStatus
   );
+
+// Get Products by Seller ID
+/**
+ * @swagger
+ * /products/seller/{sellerId}:
+ *   get:
+ *     summary: Get products by seller ID
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: sellerId
+ *         required: true
+ *         description: ID of the seller whose products to retrieve
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Products retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Bad request
+ */
+router.get(
+  "/products/seller/:sellerId",
+  verifyToken,
+  productController.getProductsBySellerId
+);
 
 module.exports = router;

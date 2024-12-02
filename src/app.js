@@ -37,13 +37,12 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) callback(null, true);
       else callback(new Error("Not allowed by CORS"));
     },
-    methods: "GET,POST,PUT,DELETE",
+    methods: "GET,POST,PUT,DELETE,PATCH",
     credentials: true,
   })
 );
 
 app.use(rateLimiter);
-
 // Add Swagger UI route
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs)); // Swagger documentation route
 
