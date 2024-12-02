@@ -102,4 +102,6 @@ router.post('/auth/confirm', authController.confirmEmail);
  */
 router.post('/auth/signin', checkBanStatus, authController.login);
 
+router.post('/auth/signin-with-google', authController.googleLogin);
+
 module.exports = router;

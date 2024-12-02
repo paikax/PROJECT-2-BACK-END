@@ -172,3 +172,4 @@ exports.updatePassword = async (userId, currentPassword, newPassword) => {
     throw new Error(err.message || "Failed to update password.");
   }
 };
+
