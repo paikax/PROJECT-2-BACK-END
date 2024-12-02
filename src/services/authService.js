@@ -152,6 +152,7 @@ exports.registerUserFromGoogle = async (email) => {
       fullName: email.split("@")[0], // Default username based on email prefix
       password: "Password123@", // Placeholder password
       role: "user", // Default role
+      isConfirmed: true,
       isActive: true,
     });
 
