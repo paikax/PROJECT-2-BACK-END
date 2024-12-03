@@ -5,6 +5,7 @@ exports.createProduct = async (req, res) => {
   try {
     const {
       name,
+      originalPrice,
       price,
       description,
       imageUrls,
@@ -16,7 +17,8 @@ exports.createProduct = async (req, res) => {
     const product = await productService.createProduct({
       sellerId: req.user.id,
       name,
-      price,
+      originalPrice: originalPrice,
+      price: price,
       description,
       imageUrls,
       variants,
