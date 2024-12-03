@@ -6,6 +6,11 @@ const discountSchema = new mongoose.Schema({
     ref: "Product",
     required: true,
   },
+  sellerId: { // Add this line
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   discountPercentage: {
     type: Number,
     required: true,

@@ -1,7 +1,9 @@
 const Discount = require("../models/Discount");
 const Product = require("../models/Product");
 
-exports.createDiscount = async ({ productId, discountPercentage, startDate, endDate }) => {
+// discountService.js
+
+exports.createDiscount = async ({ productId, discountPercentage, startDate, endDate, sellerId }) => {
   // Check if there's an active discount for the product
   const activeDiscount = await Discount.findOne({
     productId,
@@ -13,7 +15,7 @@ exports.createDiscount = async ({ productId, discountPercentage, startDate, endD
   }
 
   // Create the discount entry
-  const discount = new Discount({ productId, discountPercentage, startDate, endDate });
+  const discount = new Discount({ productId, discountPercentage, startDate, endDate, sellerId }); // Include sellerId
   await discount.save();
 
   // Fetch the product to update its price
@@ -68,5 +70,13 @@ exports.deleteDiscount = async (id) => {
       variant.price = variant.originalPrice; // Reset each variant
     });
     await product.save();
+  }
+};
+
+exports.getDiscountsBySellerId = async (sellerId) => {
+  try {
+    return await Discount.find({ sellerId }).populate("productId"); // Assuming productId is a reference to the Product model
+  } catch (err) {
+    throw new Error("Failed to retrieve discounts for the seller");
   }
 };
