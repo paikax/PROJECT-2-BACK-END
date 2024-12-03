@@ -12,13 +12,39 @@ exports.createProduct = async ({
   categoryId,
   brandId,
 }) => {
-  const product = new Product({
+  console.log("Received product details:", {
     sellerId,
     name,
     price,
     description,
     imageUrls,
     variants,
+    categoryId,
+    brandId,
+  });
+
+  // Validate variant prices
+  variants.forEach((variant, index) => {
+    const variantPrice = variant.price;
+    if (isNaN(variantPrice) || variantPrice < 0) {
+      throw new Error(`Invalid variant price at index ${index}: ${variantPrice}`);
+    }
+  });
+
+  // Create the product object
+  const product = new Product({
+    sellerId,
+    name,
+    originalPrice: price, // Set originalPrice to the input price
+    price: price,
+    description,
+    imageUrls,
+    variants: variants.map(variant => ({
+      originalPrice: variant.price, // Set originalPrice as the variant price
+      price: variant.price, // Set the price for the variant
+      stockQuantity: variant.stockQuantity,
+      attributes: variant.attributes,
+    })),
     categoryId,
     brandId,
   });

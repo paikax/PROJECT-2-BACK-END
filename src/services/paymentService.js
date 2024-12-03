@@ -12,8 +12,8 @@ exports.createCheckoutSession = async (userId, orderId) => {
 
   // Prepare Stripe line items from the order
   const lineItems = order.orderItems.map((item) => {
-    // Remove dots from price before converting to number
-    const unitAmount = parseFloat(String(item.price || "0").replace(/\./g, ""));
+    // Ensure the price is treated as a number
+    const unitAmount = Math.round(parseFloat(item.price) * 100); // Convert to the smallest currency unit (e.g., VND cents)
     return {
       price_data: {
         currency: "vnd", // Currency in VND
@@ -21,9 +21,9 @@ exports.createCheckoutSession = async (userId, orderId) => {
           name: item.productId.name,
           images: [item.productId.imageUrls?.[0] || "default-image-url"], // Fallback for image URL
         },
-        unit_amount: Math.round(unitAmount), // Amount in VND
+        unit_amount: unitAmount, // Amount in VND
       },
-      quantity: Math.max(1, parseInt(item.quantity) || 1), // Default quantity to 1 if invalid
+      quantity: Math.max(1, parseInt(item.quantity, 10) || 1), // Default quantity to 1 if invalid
     };
   });
 

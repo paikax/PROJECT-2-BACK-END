@@ -21,8 +21,8 @@ exports.createCheckoutSession = async (req, res) => {
     // Calculate the total price from the cart
     const totalPrice = cart.items.reduce((sum, item) => {
       const variantPrice = item.variantDetails
-        ? parseFloat(item.variantDetails.price.replace(/\./g, ""))
-        : parseFloat(item.product.price.replace(/\./g, ""));
+        ? parseFloat(item.variantDetails.price) // Ensure this is a Number
+        : parseFloat(item.product.price); // Ensure this is a Number
       return sum + item.count * variantPrice;
     }, 0);
 

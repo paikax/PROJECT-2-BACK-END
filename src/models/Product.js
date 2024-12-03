@@ -15,8 +15,12 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  originalPrice: {
+    type: Number,
+    min: 0,
+  },
   price: {
-    type: String,
+    type: Number,
     required: true,
     min: 0,
   },
@@ -46,13 +50,17 @@ const productSchema = new mongoose.Schema({
   },
   variants: [
     {
+      originalPrice: {
+        type: Number,
+        min: 0,
+      },
       price: {
-        type: String,
+        type: Number,
         required: true,
         min: 0,
       },
       stockQuantity: {
-        type: String,
+        type: Number,
         required: true,
         min: 0,
       },
