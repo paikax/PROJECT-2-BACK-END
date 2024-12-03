@@ -57,8 +57,8 @@ const productSchema = new mongoose.Schema({
         min: 0,
       },
       attributes: {
-        option: { type: String, required: true }, // Example: "16gb-256gb"
-        color: { type: String, required: true }, // Example: "black" or "white"
+        option: { type: String }, // Example: "16gb-256gb"
+        color: { type: String }, // Example: "black" or "white"
       },
     },
   ],
