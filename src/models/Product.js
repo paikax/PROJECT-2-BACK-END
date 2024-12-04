@@ -82,12 +82,10 @@ const productSchema = new mongoose.Schema({
       enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
-    description: {
-      type: String,
-      default: "This product is under review. Please wait...",
-    },
-    reason: {
-      type: String,
+    requestId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Request",
+        default: null
     },
   },
   views: {
