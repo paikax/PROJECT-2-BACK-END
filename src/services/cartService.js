@@ -24,6 +24,22 @@ exports.getCart = async (userId) => {
     }
   }
 
+  // Check if any coupon can be applied
+  if (cart.items.length > 0) {
+    const validCoupons = await Coupon.find({
+      minItemCount: { $lte: cart.items.length },
+      validity: { $gte: new Date() }, // Ensure the coupon is still valid
+    });
+
+    // Apply the highest discount coupon if applicable
+    if (validCoupons.length > 0) {
+      const bestCoupon = validCoupons.reduce((prev, current) => {
+        return (prev.discount > current.discount) ? prev : current;
+      });
+      cart.appliedCoupon = bestCoupon; // You can store or return the best coupon
+    }
+  }
+
   return cart;
 };
 

@@ -11,14 +11,23 @@ const couponSchema = new mongoose.Schema({
     required: true,
     min: 0,
   },
-  sellerId: {
+  adminId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true, // Ensure the coupon is associated with a seller
+    required: true, // Ensure the coupon is associated with a admin
   },
   validity: {
     type: Date,
     required: true,
+  },
+  minItemCount: {
+    type: Number,
+    required: true,
+    min: 0, // Minimum items required to apply this coupon
+  },
+  description: {
+    type: String,
+    required: true, // Make description required
   },
   createdAt: {
     type: Date,
