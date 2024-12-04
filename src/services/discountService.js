@@ -1,9 +1,21 @@
 const Discount = require("../models/Discount");
 const Product = require("../models/Product");
 
-exports.createDiscount = async ({ productId, discountPercentage, startDate, endDate }) => {
+// discountService.js
+
+exports.createDiscount = async ({ productId, discountPercentage, startDate, endDate, sellerId }) => {
+  // Check if there's an active discount for the product
+  const activeDiscount = await Discount.findOne({
+    productId,
+    endDate: { $gte: new Date() }, // Check if the current date is within the discount period
+  });
+
+  if (activeDiscount) {
+    throw new Error("A discount is already active for this product. Please wait until the current discount expires.");
+  }
+
   // Create the discount entry
-  const discount = new Discount({ productId, discountPercentage, startDate, endDate });
+  const discount = new Discount({ productId, discountPercentage, startDate, endDate, sellerId }); // Include sellerId
   await discount.save();
 
   // Fetch the product to update its price
@@ -14,25 +26,19 @@ exports.createDiscount = async ({ productId, discountPercentage, startDate, endD
 
   // Check and apply the discount
   if (product.originalPrice !== undefined && !isNaN(product.originalPrice)) {
-    // Store original prices
     const originalProductPrice = product.price;
-    product.price = product.originalPrice * (1 - discountPercentage / 100);
+    product.price = parseFloat((product.originalPrice * (1 - discountPercentage / 100)).toFixed(2)); // Rounded to 2 decimals
 
-    // Update variant prices
     product.variants.forEach(variant => {
       if (variant.originalPrice !== undefined && !isNaN(variant.originalPrice)) {
-        // Store original variant price
         const originalVariantPrice = variant.price;
-        variant.price = variant.originalPrice * (1 - discountPercentage / 100);
-        
-        // Save the original price if needed (optional)
-        variant.originalPrice = originalVariantPrice; // Retain original price
+        variant.price = parseFloat((variant.originalPrice * (1 - discountPercentage / 100)).toFixed(2)); // Rounded to 2 decimals
+        variant.originalPrice = originalVariantPrice;
       } else {
         throw new Error("Variant original price is missing or invalid.");
       }
     });
 
-    // Save the updated product
     await product.save();
   } else {
     throw new Error("Product original price is missing or invalid.");
@@ -54,7 +60,7 @@ exports.deleteDiscount = async (id) => {
   const discount = await Discount.findById(id);
   if (!discount) throw new Error("Discount not found");
   
-  await discount.remove();
+  await Discount.deleteOne({ _id: id });
 
   // Optionally, reset product prices if needed
   const product = await Product.findById(discount.productId);
@@ -64,5 +70,13 @@ exports.deleteDiscount = async (id) => {
       variant.price = variant.originalPrice; // Reset each variant
     });
     await product.save();
+  }
+};
+
+exports.getDiscountsBySellerId = async (sellerId) => {
+  try {
+    return await Discount.find({ sellerId }).populate("productId"); // Assuming productId is a reference to the Product model
+  } catch (err) {
+    throw new Error("Failed to retrieve discounts for the seller");
   }
 };
