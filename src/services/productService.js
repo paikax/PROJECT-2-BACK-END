@@ -53,6 +53,7 @@ exports.createProduct = async ({
   return product;
 };
 
+
 exports.getAllProducts = async (query) => {
   try {
     return await Product.find(query)
