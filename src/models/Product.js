@@ -65,8 +65,8 @@ const productSchema = new mongoose.Schema({
         min: 0,
       },
       attributes: {
-        option: { type: String }, // Example: "16gb-256gb"
-        color: { type: String }, // Example: "black" or "white"
+        type: Map,
+        of: String, // This allows dynamic key-value pairs like "ram", "color", etc.
       },
     },
   ],
@@ -83,9 +83,9 @@ const productSchema = new mongoose.Schema({
       default: "pending",
     },
     requestId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Request",
-        default: null
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Request",
+      default: null,
     },
   },
   views: {
