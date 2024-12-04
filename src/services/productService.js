@@ -27,7 +27,9 @@ exports.createProduct = async ({
   variants.forEach((variant, index) => {
     const variantPrice = variant.price;
     if (isNaN(variantPrice) || variantPrice < 0) {
-      throw new Error(`Invalid variant price at index ${index}: ${variantPrice}`);
+      throw new Error(
+        `Invalid variant price at index ${index}: ${variantPrice}`
+      );
     }
   });
 
@@ -39,11 +41,11 @@ exports.createProduct = async ({
     price: price,
     description,
     imageUrls,
-    variants: variants.map(variant => ({
+    variants: variants.map((variant) => ({
       originalPrice: variant.price, // Set originalPrice as the variant price
       price: variant.price, // Set the price for the variant
       stockQuantity: variant.stockQuantity,
-      attributes: variant.attributes,
+      attributes: variant.attributes, // Dynamic attributes will now be supported
     })),
     categoryId,
     brandId,
@@ -52,7 +54,6 @@ exports.createProduct = async ({
   await product.save();
   return product;
 };
-
 
 exports.getAllProducts = async (query) => {
   try {
@@ -108,7 +109,7 @@ exports.updateProduct = async (id, updates) => {
       return { ...existingVariant, ...variant };
     });
   }
-  
+
   await product.save();
   return product;
 };
@@ -197,8 +198,8 @@ exports.deleteReportById = async (reportId) => {
 };
 
 exports.updateVerifyStatus = async (id, updates) => {
-    const target = await Product.findById(id); // Thay `TargetModel` bằng `Product/Brand/Category`
-    if (!target) throw new Error('Target not found');
-    target.verify = updates.verify;
-    await target.save();
-  };
+  const target = await Product.findById(id); // Thay `TargetModel` bằng `Product/Brand/Category`
+  if (!target) throw new Error("Target not found");
+  target.verify = updates.verify;
+  await target.save();
+};

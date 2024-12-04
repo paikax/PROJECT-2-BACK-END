@@ -14,7 +14,6 @@ const router = express.Router();
  *   description: API for managing products
  */
 
-// Create a Product
 /**
  * @swagger
  * /products:
@@ -66,13 +65,9 @@ const router = express.Router();
  *                       description: Stock quantity of the variant
  *                     attributes:
  *                       type: object
- *                       properties:
- *                         option:
- *                           type: string
- *                           description: Variant option (e.g., "16gb-256gb")
- *                         color:
- *                           type: string
- *                           description: Variant color (e.g., "black" or "white")
+ *                       additionalProperties:
+ *                         type: string
+ *                       description: Dynamic object for variant attributes (e.g., ram, color)
  *               categoryId:
  *                 type: string
  *                 description: ID of the category the product belongs to
