@@ -73,6 +73,18 @@ const userSchema = new mongoose.Schema({
     enum: ['admin', 'user', 'seller'],
     default: 'user',
   },
+  verify: {
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    requestId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Request",
+        default: null
+    },
+},
   isBanned: {
     type: Boolean,
     default: false,
