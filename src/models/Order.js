@@ -30,6 +30,7 @@ const orderSchema = new mongoose.Schema({
   orderItems: [orderItemSchema],
   reason: { type: String },
   refundAmount: { type: Number, default: 0 },
+  couponCode: { type: String, default: null },
 });
 
 module.exports = mongoose.model("Order", orderSchema);
