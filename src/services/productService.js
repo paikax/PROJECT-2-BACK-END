@@ -107,7 +107,7 @@ exports.updateProduct = async (id, updates) => {
       return { ...existingVariant, ...variant };
     });
   }
-
+  
   await product.save();
   return product;
 };
@@ -194,3 +194,10 @@ exports.deleteReportById = async (reportId) => {
   await report.remove();
   return product;
 };
+
+exports.updateVerifyStatus = async (id, updates) => {
+    const target = await Product.findById(id); // Thay `TargetModel` bằng `Product/Brand/Category`
+    if (!target) throw new Error('Target not found');
+    target.verify = updates.verify;
+    await target.save();
+  };
