@@ -3,6 +3,7 @@ const productController = require("../controllers/productController");
 const { verifyToken } = require("../middleware/authMiddleware");
 const authorizeRole = require("../middleware/roleMiddleware");
 const { updateVerifyDescription } = require("../middleware/verifyMiddleware");
+const reviewController = require("../controllers/reviewController");
 
 const router = express.Router();
 
@@ -130,7 +131,7 @@ router.post(
  *       400:
  *         description: Bad request
  */
-router.get("/products", verifyToken, productController.getAllProducts);
+router.get("/products", productController.getAllProducts);
 
 // Retrieve a Product by ID
 /**
@@ -403,4 +404,181 @@ router.get(
   productController.getProductsBySellerId
 );
 
+/**
+ * @swagger
+ * tags:
+ *   name: Reviews
+ *   description: API for managing product reviews
+ */
+
+// Create a Review
+/**
+ * @swagger
+ * /reviews:
+ *   post:
+ *     summary: Create a review for a product
+ *     tags: [Reviews]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - productId
+ *               - rating
+ *               - comment
+ *             properties:
+ *               productId:
+ *                 type: string
+ *                 description: ID of the product to review
+ *               rating:
+ *                 type: number
+ *                 description: Rating for the product (1-5)
+ *               comment:
+ *                 type: string
+ *                 description: Review comment
+ *     responses:
+ *       201:
+ *         description: Review created successfully
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: User must purchase the product before reviewing
+ */
+router.post("/reviews", verifyToken, reviewController.createReview);
+
+// Get Reviews for a Product
+/**
+ * @swagger
+ * /reviews/{productId}:
+ *   get:
+ *     summary: Get all reviews for a product
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         description: ID of the product to retrieve reviews for
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of reviews retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   userId:
+ *                     type: string
+ *                     description: ID of the user who wrote the review
+ *                   productId:
+ *                     type: string
+ *                     description: ID of the reviewed product
+ *                   rating:
+ *                     type: number
+ *                     description: Rating given by the user
+ *                   comment:
+ *                     type: string
+ *                     description: Review comment
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *       400:
+ *         description: Bad request
+ */
+router.get("/reviews/:productId", reviewController.getProductReviews);
+
+// Update a Review
+/**
+ * @swagger
+ * /reviews/{id}:
+ *   put:
+ *     summary: Update a review
+ *     tags: [Reviews]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the review to update
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               rating:
+ *                 type: number
+ *                 description: Updated rating for the product (1-5)
+ *               comment:
+ *                 type: string
+ *                 description: Updated review comment
+ *     responses:
+ *       200:
+ *         description: Review updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *                 review:
+ *                   type: object
+ *                   description: Updated review object
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: User not authorized to update the review
+ *       404:
+ *         description: Review not found
+ */
+router.put("/reviews/:id", verifyToken, reviewController.updateReview);
+
+// Delete a Review
+/**
+ * @swagger
+ * /reviews/{id}:
+ *   delete:
+ *     summary: Delete a review
+ *     tags: [Reviews]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the review to delete
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Review deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: User not authorized to delete the review
+ *       404:
+ *         description: Review not found
+ */
+router.delete("/reviews/:id", verifyToken, reviewController.deleteReview);
 module.exports = router;
