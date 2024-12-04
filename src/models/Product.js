@@ -15,8 +15,12 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  originalPrice: {
+    type: Number,
+    min: 0,
+  },
   price: {
-    type: String,
+    type: Number,
     required: true,
     min: 0,
   },
@@ -46,19 +50,23 @@ const productSchema = new mongoose.Schema({
   },
   variants: [
     {
+      originalPrice: {
+        type: Number,
+        min: 0,
+      },
       price: {
-        type: String,
+        type: Number,
         required: true,
         min: 0,
       },
       stockQuantity: {
-        type: String,
+        type: Number,
         required: true,
         min: 0,
       },
       attributes: {
-        option: { type: String, required: true }, // Example: "16gb-256gb"
-        color: { type: String, required: true }, // Example: "black" or "white"
+        type: Map,
+        of: String, // This allows dynamic key-value pairs like "ram", "color", etc.
       },
     },
   ],
@@ -74,12 +82,10 @@ const productSchema = new mongoose.Schema({
       enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
-    description: {
-      type: String,
-      default: "This product is under review. Please wait...",
-    },
-    reason: {
-      type: String,
+    requestId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Request",
+      default: null,
     },
   },
   views: {

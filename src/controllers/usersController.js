@@ -1,7 +1,10 @@
 const userService = require("../services/userService");
 const productService = require("../services/productService");
 const jwt = require("jsonwebtoken");
-const { addToBlacklist, removeFromBlacklist } = require("../middleware/authMiddleware");
+const {
+  addToBlacklist,
+  removeFromBlacklist,
+} = require("../middleware/authMiddleware");
 
 // Get all users (for admin only, maybe add role checking in the future)
 exports.getAllUsers = async (req, res) => {
@@ -36,6 +39,7 @@ exports.updateUser = async (req, res) => {
     address,
     gender,
     imageUrl,
+    fullName,
   } = req.body;
 
   try {
@@ -59,6 +63,7 @@ exports.updateUser = async (req, res) => {
       address: address || user.address,
       gender: gender || user.gender,
       imageUrl: imageUrl || user.imageUrl,
+      fullName: fullName || user.fullName,
     };
 
     Object.assign(user, updatedFields);
@@ -140,21 +145,21 @@ exports.banUser = async (req, res) => {
   }
 
   try {
-    // Call the service to update the ban status
+    // Call the service to update the ban status for the target user
     const updatedUser = await userService.setBanStatus(userId, isBanned);
 
     if (!updatedUser) {
       return res.status(404).json({ error: "User not found." });
     }
 
-    const token = req.headers.authorization.split("Bearer ")[1];
-    if (isBanned) {
-      // If the user is banned, add the token to the blacklist
-      addToBlacklist(token);
-    } else {
-      // If the user is unbanned, remove the token from the blacklist
-      removeFromBlacklist(token);
-    }
+    // const token = req.headers.authorization.split("Bearer ")[1];
+    // if (isBanned) {
+    //   // If the user is banned, add the token to the blacklist
+    //   addToBlacklist(token);
+    // } else {
+    //   // If the user is unbanned, remove the token from the blacklist
+    //   removeFromBlacklist(token);
+    // }
 
     res.status(200).json({
       message: `User has been successfully ${
@@ -170,7 +175,7 @@ exports.banUser = async (req, res) => {
 };
 
 exports.getUserReportFlags = async (req, res) => {
-  const userId = req.params.id; // Assuming the user ID is passed in the route
+  const userId = req.params.id;
 
   try {
     const reportDetails = await userService.getUserReportFlags(userId);
@@ -191,5 +196,47 @@ exports.deleteReportById = async (req, res) => {
     });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+};
+
+exports.adminUpdateUser = async (req, res) => {
+  const { userId, fullName, dateOfBirth, phone, address, gender, role } =
+    req.body;
+
+  try {
+    // Check if the user is admin (middleware should ensure the token is valid and has admin role)
+    const userRole = req.user.role; // Assuming the role is added to req.user in the middleware
+
+    if (userRole !== "admin") {
+      return res
+        .status(403)
+        .json({ error: "Forbidden: Admin access required" });
+    }
+
+    // Get the user that needs to be updated
+    const userToUpdate = await userService.getUserById(userId);
+    if (!userToUpdate) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Prepare the fields to update
+    const updatedFields = {
+      fullName: fullName || userToUpdate.fullName,
+      dateOfBirth: dateOfBirth || userToUpdate.dateOfBirth,
+      phone: phone || userToUpdate.phone,
+      address: address || userToUpdate.address,
+      gender: gender || userToUpdate.gender,
+      role: role || userToUpdate.role,
+    };
+
+    // Apply the update
+    Object.assign(userToUpdate, updatedFields);
+    await userToUpdate.save();
+
+    res
+      .status(200)
+      .json({ message: "User updated successfully", user: userToUpdate });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update user: " + err.message });
   }
 };

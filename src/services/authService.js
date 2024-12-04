@@ -130,3 +130,35 @@ exports.loginUser = async (email, password) => {
   );
   return { accessToken, refreshToken };
 };
+
+exports.getUserByEmail = async (email) => {
+  try {
+    return await User.findOne({ email });
+  } catch (err) {
+    throw new Error("Failed to retrieve user by email");
+  }
+};
+
+// Register a user with Google details
+exports.registerUserFromGoogle = async (email) => {
+  try {
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      throw new Error("User already exists.");
+    }
+
+    const newUser = new User({
+      email,
+      fullName: email.split("@")[0], // Default username based on email prefix
+      password: "Password123@", // Placeholder password
+      role: "user", // Default role
+      isConfirmed: true,
+      isActive: true,
+    });
+
+    await newUser.save();
+    return newUser;
+  } catch (err) {
+    throw new Error("Failed to register user with Google.");
+  }
+};

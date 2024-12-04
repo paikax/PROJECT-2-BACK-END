@@ -19,6 +19,18 @@ const categorySchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  verify: {
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    requestId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Request",
+        default: null
+    },
+}
 });
 
 module.exports = mongoose.model('Category', categorySchema);

@@ -43,3 +43,11 @@ exports.deleteBrand = async (id) => {
     throw new Error('Brand not found');
   }
 };
+
+exports.updateVerifyStatus = async (id, updates) => {
+    const target = await Brand.findById(id); // Thay `TargetModel` bằng `Product/Brand/Category`
+    if (!target) throw new Error('Target not found');
+    target.verify = updates.verify;
+    await target.save();
+  };
+  

@@ -1,15 +1,14 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 const tokenBlacklist = new Set();
 
 const verifyToken = async (req, res, next) => {
-  let token;
-  let authHeader = req.headers.Authorization || req.headers.authorization;
-
+  const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith("Bearer ")) {
-    token = authHeader.split(" ")[1]; // Adjusted split for better readability
-    if (!token) {
+    const token = authHeader.split(" ")[1];
+    if (!token)
       return res.status(401).json({ message: "Authentication failed" });
-    }
+
     if (tokenBlacklist.has(token)) {
       return res
         .status(401)
@@ -17,16 +16,22 @@ const verifyToken = async (req, res, next) => {
     }
 
     try {
-      // Verify the token and attach user info to the request
-      req.user = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      if (user.isBanned)
+        return res
+          .status(403)
+          .json({ message: "Access denied. User is banned." });
+
+      req.user = user;
       next();
     } catch (err) {
       res.status(401).json({ message: "Invalid token." });
     }
   } else {
-    // Allow unauthenticated users to access the route without a token
-    req.user = null; // Set user to null if not authenticated
-    next(); // Proceed to the next middleware or route handler
+    res.status(401).json({ message: "No token provided." });
   }
 };
 
