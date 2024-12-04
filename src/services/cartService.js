@@ -1,5 +1,6 @@
 const ShoppingCart = require("../models/ShoppingCart");
 const Product = require("../models/Product");
+const Coupon = require("../models/Coupon");
 
 // Get the shopping cart for a user
 exports.getCart = async (userId) => {
@@ -34,7 +35,7 @@ exports.getCart = async (userId) => {
     // Apply the highest discount coupon if applicable
     if (validCoupons.length > 0) {
       const bestCoupon = validCoupons.reduce((prev, current) => {
-        return (prev.discount > current.discount) ? prev : current;
+        return prev.discount > current.discount ? prev : current;
       });
       cart.appliedCoupon = bestCoupon; // You can store or return the best coupon
     }
@@ -44,14 +45,22 @@ exports.getCart = async (userId) => {
 };
 
 // Add or update a product in the cart
-exports.addToCart = async (userId, productId, variantId, count, deliveryAddress) => {
+exports.addToCart = async (
+  userId,
+  productId,
+  variantId,
+  count,
+  deliveryAddress
+) => {
   const product = await Product.findById(productId);
   if (!product) {
     throw new Error("Product not found");
   }
 
   if (variantId) {
-    const variant = product.variants.find((v) => v._id.toString() === variantId);
+    const variant = product.variants.find(
+      (v) => v._id.toString() === variantId
+    );
     if (!variant) {
       throw new Error("Variant not found for this product");
     }
@@ -69,7 +78,8 @@ exports.addToCart = async (userId, productId, variantId, count, deliveryAddress)
   }
 
   const existingItem = cart.items.find(
-    (item) => item.product.toString() === productId && item.variantId === variantId
+    (item) =>
+      item.product.toString() === productId && item.variantId === variantId
   );
 
   if (existingItem) {
@@ -91,7 +101,8 @@ exports.removeFromCart = async (userId, productId, variantId) => {
 
   // Remove the product with the specific variant
   cart.items = cart.items.filter(
-    (item) => item.product.toString() !== productId || item.variantId !== variantId
+    (item) =>
+      item.product.toString() !== productId || item.variantId !== variantId
   );
 
   await cart.save();
@@ -106,7 +117,8 @@ exports.updateCartItem = async (userId, productId, variantId, count) => {
   }
 
   const item = cart.items.find(
-    (item) => item.product.toString() === productId && item.variantId === variantId
+    (item) =>
+      item.product.toString() === productId && item.variantId === variantId
   );
 
   if (!item) {
@@ -116,7 +128,8 @@ exports.updateCartItem = async (userId, productId, variantId, count) => {
   if (count <= 0) {
     // Remove the item if count is 0 or less
     cart.items = cart.items.filter(
-      (item) => item.product.toString() !== productId || item.variantId !== variantId
+      (item) =>
+        item.product.toString() !== productId || item.variantId !== variantId
     );
   } else {
     item.count = count; // Update count
