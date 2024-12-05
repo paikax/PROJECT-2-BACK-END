@@ -609,7 +609,7 @@ router.delete("/reviews/:id", verifyToken, reviewController.deleteReview);
  *         description: Variant not found
  */
 router.get(
-  "/product/variant/:variantId",
+  "/products/variant/:variantId",
   productController.fetchVariantDetails
 );
 
