@@ -1,14 +1,15 @@
 const Request = require('../models/Request');
 
 exports.createRequest = async ({ type, targetId, title, reason, createdBy }) => {
-    return await Request.create({
-      type,
-      targetId,
-      title,
-      reason,
-      createdBy,
-    });
-  };
+  const request = await Request.create({
+    type,
+    targetId,
+    title,
+    reason,
+    createdBy,
+  });
+  return request; // Return the created request
+};
 
   exports.getAllRequests = async (filter) => {
     return await Request.find(filter).populate('createdBy updatedBy targetId');

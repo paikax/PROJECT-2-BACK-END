@@ -1,6 +1,7 @@
 const Product = require("../models/Product");
 const ProductReport = require("../models/ProductReport");
 const User = require("../models/User");
+const RequestService = require('../services/requestService');
 
 exports.createProduct = async ({
   sellerId,
@@ -37,21 +38,35 @@ exports.createProduct = async ({
   const product = new Product({
     sellerId,
     name,
-    originalPrice: price, // Set originalPrice to the input price
+    originalPrice: price,
     price: price,
     description,
     imageUrls,
     variants: variants.map((variant) => ({
-      originalPrice: variant.price, // Set originalPrice as the variant price
-      price: variant.price, // Set the price for the variant
+      originalPrice: variant.price,
+      price: variant.price,
       stockQuantity: variant.stockQuantity,
-      attributes: variant.attributes, // Dynamic attributes will now be supported
+      attributes: variant.attributes,
     })),
     categoryId,
     brandId,
   });
 
   await product.save();
+
+  // Create a request for the new product
+  const request = await RequestService.createRequest({
+    type: 'product',
+    targetId: product._id,
+    title: `Request for new product: ${name}`,
+    reason: `A new product has been created by seller ${sellerId}.`,
+    createdBy: sellerId,
+  });
+
+  // Update the product with the requestId
+  product.verify.requestId = request._id;
+  await product.save();
+
   return product;
 };
 

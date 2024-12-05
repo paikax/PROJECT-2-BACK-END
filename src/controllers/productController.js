@@ -41,7 +41,7 @@ exports.getAllProducts = async (req, res) => {
     // Base query (dành cho từng loại người dùng)
     let query = {};
     if (userRole === "admin" || userRole === "seller") {
-      query["verify.status"] = { $in: ["approved", "pending"] };
+      query["verify.status"] = { $in: ["approved", "pending","rejected"] };
     } else {
       query["verify.status"] = "approved";
     }
