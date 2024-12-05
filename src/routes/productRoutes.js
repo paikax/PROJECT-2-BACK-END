@@ -126,7 +126,7 @@ router.post(
  *       400:
  *         description: Bad request
  */
-router.get("/products", verifyToken, productController.getAllProducts);
+router.get("/products", productController.getAllProducts);
 
 // Retrieve a Product by ID
 /**
