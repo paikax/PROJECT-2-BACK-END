@@ -227,8 +227,7 @@ router.post("/users/refresh-token", userController.refreshToken);
  * /admin/ban-user:
  *   post:
  *     summary: Ban or unban a user
- *     description: Ban or 
- * unban a user by their ID.
+ *     description: Ban or unban a user by their ID.
  *     tags:
  *       - Users
  *     security:

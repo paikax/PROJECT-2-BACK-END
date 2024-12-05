@@ -13,7 +13,7 @@ const cartRoutes = require("./routes/cartRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const discountRoutes = require("./routes/discountRoutes");
 const couponRoutes = require("./routes/couponRoutes");
-const RequestRoutes = require("./routes/RequestRoutes");
+const requestRoutes = require("./routes/requestRoutes");
 
 require("../config/db");
 require("dotenv").config({ path: "./../development/.env" });
@@ -58,7 +58,7 @@ app.use("/api", cartRoutes);
 app.use("/api", paymentRoutes);
 app.use("/api", discountRoutes);
 app.use("/api", couponRoutes);
-app.use("/api", RequestRoutes)
+app.use("/api", requestRoutes);
 app.use("/", (req, res) => {
   res.send("This is DEV-G5 root endpoint^^.");
 });

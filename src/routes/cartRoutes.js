@@ -3,7 +3,6 @@ const Order = require("../models/Order"); // Import the Order model
 const cartController = require("../controllers/cartController");
 const { verifyToken } = require("../middleware/authMiddleware");
 const moment = require("moment");
-const config = require("config");
 const querystring = require("querystring");
 const crypto = require("crypto"); // Import crypto module
 const Coupon = require("../models/Coupon");
