@@ -64,12 +64,21 @@ exports.getAllProducts = async (req, res) => {
     if (category) {
       const categories = category.split(",");
       query.$or = query.$or || [];
-      const categoryIds = categories.filter(id => mongoose.isValidObjectId(id));
-      const categoryNames = categories.filter(name => !mongoose.isValidObjectId(name));
-      if (categoryIds.length) query.$or.push({ categoryId: { $in: categoryIds } });
+      const categoryIds = categories.filter((id) =>
+        mongoose.isValidObjectId(id)
+      );
+      const categoryNames = categories.filter(
+        (name) => !mongoose.isValidObjectId(name)
+      );
+      if (categoryIds.length)
+        query.$or.push({ categoryId: { $in: categoryIds } });
       if (categoryNames.length) {
-        const categoryDocs = await Category.find({ name: { $in: categoryNames } });
-        query.$or.push({ categoryId: { $in: categoryDocs.map(cat => cat._id) } });
+        const categoryDocs = await Category.find({
+          name: { $in: categoryNames },
+        });
+        query.$or.push({
+          categoryId: { $in: categoryDocs.map((cat) => cat._id) },
+        });
       }
     }
 
@@ -77,12 +86,14 @@ exports.getAllProducts = async (req, res) => {
     if (brand) {
       const brands = brand.split(",");
       query.$or = query.$or || [];
-      const brandIds = brands.filter(id => mongoose.isValidObjectId(id));
-      const brandNames = brands.filter(name => !mongoose.isValidObjectId(name));
+      const brandIds = brands.filter((id) => mongoose.isValidObjectId(id));
+      const brandNames = brands.filter(
+        (name) => !mongoose.isValidObjectId(name)
+      );
       if (brandIds.length) query.$or.push({ brandId: { $in: brandIds } });
       if (brandNames.length) {
         const brandDocs = await Brand.find({ name: { $in: brandNames } });
-        query.$or.push({ brandId: { $in: brandDocs.map(br => br._id) } });
+        query.$or.push({ brandId: { $in: brandDocs.map((br) => br._id) } });
       }
     }
 
@@ -102,11 +113,13 @@ exports.getAllProducts = async (req, res) => {
       query.price = { $gte: parseFloat(minPrice), $lte: parseFloat(maxPrice) };
     }
 
-    
     // 6. Filter rating (theo khoảng)
     if (rating) {
       const [minRating, maxRating] = rating.split(",");
-      query.rating = { $gte: parseFloat(minRating), $lte: parseFloat(maxRating) };
+      query.rating = {
+        $gte: parseFloat(minRating),
+        $lte: parseFloat(maxRating),
+      };
     }
 
     // 7. Filter variant (option và color nested trong variants.attributes)
@@ -117,7 +130,10 @@ exports.getAllProducts = async (req, res) => {
     // 8. Filter views (khoảng giá trị)
     if (views) {
       const [minViews, maxViews] = views.split(",");
-      query.views = { $gte: parseInt(minViews, 10), $lte: parseInt(maxViews, 10) };
+      query.views = {
+        $gte: parseInt(minViews, 10),
+        $lte: parseInt(maxViews, 10),
+      };
     }
 
     // 9. Filter createdAt (thời gian tạo sản phẩm)
@@ -145,14 +161,12 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
-  /* 
+/* 
     1. hien tai chi filter dc san pham co A hoac B chu khong phai ca A va B
     2. chua filter duoc sellerId.fullName trong keyword va variant color, attribute. Chua filter duoc nhieu keyword 
     3. price,view, hoat dong bat thuong. Mot san pham co gia 94.36 khi nhap 1, => doi string thanh float trong model
     
   */
-  
-  
 
 exports.getProduct = async (req, res) => {
   try {
@@ -234,5 +248,22 @@ exports.reportProduct = async (req, res) => {
     res.status(200).json({ message: "Product reported successfully.", report });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+};
+
+exports.fetchVariantDetails = async (req, res) => {
+  try {
+    const { variantId } = req.params; // Expecting the variantId as a route parameter
+    const variant = await productService.getVariantDetails(variantId);
+
+    return res.status(200).json({
+      success: true,
+      variant,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

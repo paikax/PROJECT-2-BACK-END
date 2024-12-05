@@ -203,3 +203,25 @@ exports.updateVerifyStatus = async (id, updates) => {
   target.verify = updates.verify;
   await target.save();
 };
+
+exports.getVariantDetails = async (variantId) => {
+  try {
+    // Find the product where the variant ID exists
+    const product = await Product.findOne({ "variants._id": variantId });
+
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    // Find the variant within the product by its variantId
+    const variant = product.variants.id(variantId);
+
+    if (!variant) {
+      throw new Error("Variant not found");
+    }
+
+    return variant;
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};

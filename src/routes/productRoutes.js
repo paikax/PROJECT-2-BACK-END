@@ -576,4 +576,41 @@ router.put("/reviews/:id", verifyToken, reviewController.updateReview);
  *         description: Review not found
  */
 router.delete("/reviews/:id", verifyToken, reviewController.deleteReview);
+
+/**
+ * @swagger
+ * /products/variant/{variantId}:
+ *   get:
+ *     summary: Get variant details by variant ID
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: variantId
+ *         required: true
+ *         description: ID of the variant to retrieve details
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Variant details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 variant:
+ *                   type: object
+ *                   description: Variant details
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Variant not found
+ */
+router.get(
+  "/product/variant/:variantId",
+  productController.fetchVariantDetails
+);
+
 module.exports = router;
