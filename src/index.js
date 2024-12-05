@@ -17,7 +17,6 @@ if (cluster.isMaster) {
   });
 } else {
   app.listen(3000, () => {
-    console.log("stripe key", process.env.STRIPE_SECRET_KEY);
     console.log(`Worker ${process.pid} started on port 3000`);
   });
 }
