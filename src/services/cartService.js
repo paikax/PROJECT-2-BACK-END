@@ -156,3 +156,57 @@ exports.clearCart = async (userId) => {
   await ShoppingCart.findByIdAndDelete(cart._id);
   return { message: "Cart cleared successfully" };
 };
+
+// Apply a coupon to the cart and recalculate the total price
+exports.applyCouponToCart = async (userId, couponCode) => {
+  const cart = await ShoppingCart.findOne({ user: userId }).populate(
+    "items.product",
+    "name price"
+  );
+
+  if (!cart) {
+    throw new Error("Cart not found.");
+  }
+
+  if (!couponCode) {
+    throw new Error("Coupon code is required.");
+  }
+
+  // Validate the coupon
+  const coupon = await Coupon.findOne({
+    code: couponCode,
+    validity: { $gte: new Date() }, // Ensure the coupon is still valid
+  });
+
+  if (!coupon) {
+    throw new Error("Invalid or expired coupon code.");
+  }
+
+  // Calculate the total price of the cart
+  const totalPrice = cart.items.reduce((sum, item) => {
+    const productPrice = item.product.price;
+    return sum + item.count * productPrice;
+  }, 0);
+
+  if (totalPrice < coupon.minCartPrice) {
+    throw new Error(
+      `This coupon requires a minimum cart price of ${coupon.minCartPrice}.`
+    );
+  }
+
+  // Apply the discount
+  const discount = coupon.discount;
+  const discountedPrice = totalPrice - discount;
+
+  // Update the cart with the applied coupon and new total price
+  cart.appliedCoupon = couponCode;
+  cart.discountedTotal = discountedPrice; // Save the discounted total price
+  await cart.save();
+
+  return {
+    cart,
+    totalPrice,
+    discountedPrice,
+    discount,
+  };
+};

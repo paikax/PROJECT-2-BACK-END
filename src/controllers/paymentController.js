@@ -4,11 +4,9 @@ const cartService = require("../services/cartService");
 const Order = require("../models/Order");
 const Coupon = require("../models/Coupon");
 
-// Create a checkout session
-// Create a checkout session with coupon option
 exports.createCheckoutSession = async (req, res) => {
   try {
-    const { deliveryAddress, couponCode } = req.body; // Accept couponCode from user input
+    const { deliveryAddress } = req.body; // Only require deliveryAddress
     const userId = req.user.id;
 
     const cart = await cartService.getCart(userId);
@@ -19,47 +17,59 @@ exports.createCheckoutSession = async (req, res) => {
     // Calculate total price
     const totalPrice = cart.items.reduce((sum, item) => {
       const variantPrice = item.variantDetails
-        ? parseFloat(item.variantDetails.price)
-        : parseFloat(item.product.price);
+        ? parseFloat(item.variantDetails.price || 0)
+        : parseFloat(item.product.price || 0);
       return sum + item.count * variantPrice;
     }, 0);
 
-    // Check for coupon and apply discount
     let discount = 0;
-    if (couponCode) {
+    let couponCode = null;
+
+    // Check if a coupon is applied from the cart
+    if (cart.appliedCoupon) {
+      couponCode = cart.appliedCoupon; // Get the coupon code from the cart
       const coupon = await Coupon.findOne({ code: couponCode, validity: { $gte: new Date() } });
+
       if (coupon) {
-        discount = coupon.discount; // Apply the coupon discount
+        if (totalPrice >= coupon.minCartPrice) {
+          discount = coupon.discount; // Apply the coupon discount
+        } else {
+          return res.status(400).json({
+            error: `Coupon requires a minimum cart price of ${coupon.minCartPrice}. Your cart total is ${totalPrice}.`,
+          });
+        }
       } else {
         return res.status(400).json({ error: "Invalid or expired coupon code." });
       }
     }
 
-    const finalPrice = totalPrice - discount; // Calculate final price after discount
+    const finalPrice = totalPrice - discount;
 
+    // Create the order
     const order = new Order({
       userId: userId,
       status: "Pending",
       paymentStatus: "Unpaid",
       totalQuantity: cart.items.reduce((sum, item) => sum + item.count, 0),
-      totalPrice: finalPrice, // Save the discounted price
+      totalPrice: finalPrice,
       deliveryAddress: deliveryAddress,
-      couponCode: couponCode || null, // Save the coupon code if provided
+      couponCode: couponCode || null, // Set couponCode
+      discountAmount: discount, // Include discountAmount
       orderItems: cart.items.map((item) => ({
-        productId: item.product,
+        productId: item.product._id,
         variantId: item.variantId,
         quantity: item.count,
-        price: item.variantDetails
-          ? parseFloat(item.variantDetails.price)
-          : parseFloat(item.product.price),
+        price: item.variantDetails ? parseFloat(item.variantDetails.price || 0) : parseFloat(item.product.price || 0),
       })),
     });
 
     await order.save();
 
     const sessionUrl = await paymentService.createCheckoutSession(userId, order._id);
+
     res.status(200).json({ url: sessionUrl, orderId: order._id });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };

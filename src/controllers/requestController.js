@@ -1,57 +1,50 @@
 const RequestService = require('../services/requestService');
 const ProductService = require('../services/productService');
 const UserService = require('../services/userService');
-const CategoryService = require('../services/categoryService');
-const BrandService = require('../services/brandService');
 const Product = require('../models/Product');  // Sửa đường dẫn phù hợp với dự án của bạn
 const User = require('../models/User');
-const Category = require('../models/Category');
-const Brand = require('../models/Brand');
-//chua phan ro truong hop nao can role nao
+
 exports.createRequest = async (req, res) => {
-    try {
+  try {
       const { type, targetId, title, reason } = req.body;
-  
-      // Kiểm tra `type` hợp lệ
-      if (!['product', 'user', 'category', 'brand'].includes(type)) {
-        return res.status(400).json({ error: 'Invalid request type' });
+
+      // Check if `type` is valid
+      if (!['product', 'user'].includes(type)) {
+          return res.status(400).json({ error: 'Invalid request type' });
       }
-  
-      // Xác minh `targetId` tồn tại trong collection tương ứng
+
+      // Restrict users with role `user` from creating product requests
+      if (type === 'product' && req.user.role === 'user') {
+          return res.status(403).json({ error: 'You are not authorized to request a product' });
+      }
+
+      // Verify `targetId` exists in the corresponding collection
       let targetExists;
       switch (type) {
-        case 'product':
-          targetExists = await Product.findById(targetId);
-          break;
-        case 'user':
-          targetExists = req.user.id;
-          break;
-        case 'category':
-          targetExists = await Category.findById(targetId);
-          break;
-        case 'brand':
-          targetExists = await Brand.findById(targetId);
-          break;
+          case 'product':
+              targetExists = await Product.findById(targetId);
+              break;
+          case 'user':
+              targetExists = await User.findById(targetId);
+              break;
       }
-  
       if (!targetExists) {
-        return res.status(404).json({ error: `${type} not found with the given ID` });
+          return res.status(404).json({ error: `${type} not found with the given ID` });
       }
-  
-      // Tạo request mới
+
+      // Create a new request
       const request = await RequestService.createRequest({
-        type,
-        targetId:req.user.id,
-        title,
-        reason,
-        createdBy: req.user.id,
+          type,
+          targetId,
+          title,
+          reason,
+          createdBy: req.user.id,
       });
-  
       res.status(201).json(request);
-    } catch (err) {
+  } catch (err) {
       res.status(400).json({ error: err.message });
-    }
-  };
+  }
+};
 
   exports.getAllRequests = async (req, res) => {
     try {
@@ -105,55 +98,61 @@ exports.createRequest = async (req, res) => {
 
   exports.updateRequest = async (req, res) => {
     try {
-      const { id } = req.params;
-      const { result, feedback } = req.body;
+        const { id } = req.params;
+        const { result, feedback } = req.body;
 
-      // Kiểm tra request tồn tại
-      const request = await RequestService.getRequestById(id);
-      console.log('Request found:', request);
-      if (!request) return res.status(404).json({ error: 'Request not found' });
+        // Kiểm tra request tồn tại
+        const request = await RequestService.getRequestById(id);
+        if (!request) return res.status(404).json({ error: 'Request not found' });
 
-      // Không thể cập nhật nếu request đã "done"
-      if (request.status === 'done') {
-        return res.status(400).json({ error: 'Request is already completed' });
-      }
+        // Không thể cập nhật nếu request đã "done"
+        if (request.status === 'done') {
+            return res.status(400).json({ error: 'Request is already completed' });
+        }
 
-      // Kiểm tra nếu `result` khác "pending", cần có `feedback`
-      console.log('Result:', result, 'Feedback:', feedback);
-      if (result && result !== 'pending' && !feedback) {
-        return res.status(400).json({ error: 'Feedback is required for approved or rejected requests' });
-      }
+        // Kiểm tra nếu `result` khác "pending", cần có `feedback`
+        if (result && result !== 'pending' && !feedback) {
+            return res.status(400).json({ error: 'Feedback is required for approved or rejected requests' });
+        }
 
-      // Cập nhật `target` dựa trên trạng thái
-      const updates = { verify: { status: result, requestId: id } };
-      console.log('Updates:', updates);
-      switch (request.type) {
-        case 'product':
-          await ProductService.updateVerifyStatus(request.targetId, updates);
-          break;
-        case 'brand':
-          await BrandService.updateVerifyStatus(request.targetId, updates);
-          break;
-        case 'category':
-          await CategoryService.updateVerifyStatus(request.targetId, updates);
-          break;
-        case 'user':
-          await UserService.updateRoleAndVerify(request.targetId, request.result, updates);
-          break;
-        default:
-          throw new Error('Unsupported request type');
-      }
+        // Kiểm tra `targetId` tồn tại trong collection tương ứng
+        let targetExists;
+        switch (request.type) {
+            case 'product':
+                targetExists = await Product.findById(request.targetId);
+                break;
+            case 'user':
+                targetExists = await User.findById(request.targetId);
+                break;
+            default:
+                return res.status(400).json({ error: 'Unsupported request type' });
+        }
 
-      // Cập nhật request
-      request.result = result || request.result;
-      request.feedback = feedback || request.feedback;
-      request.updatedBy = req.user.id;
-      request.status = 'done'; // Tự động chuyển trạng thái thành "done"
-      const updatedRequest = await request.save();
+        if (!targetExists) {
+            return res.status(404).json({ error: `${request.type} not found with the given ID` });
+        }
 
-      res.status(200).json(updatedRequest);
+        // Cập nhật `target` dựa trên trạng thái
+        const updates = { verify: { status: result, requestId: id } };
+        switch (request.type) {
+            case 'product':
+                await ProductService.updateVerifyStatus(request.targetId, updates);
+                break;
+            case 'user':
+                await UserService.updateRoleAndVerify(request.targetId, result, updates);
+                break;
+        }
+
+        // Cập nhật request
+        request.result = result || request.result;
+        request.feedback = feedback || request.feedback;
+        request.updatedBy = req.user.id;
+        request.status = 'done'; // Tự động chuyển trạng thái thành "done"
+        const updatedRequest = await request.save();
+
+        res.status(200).json(updatedRequest);
     } catch (err) {
-      console.error(err);
-      res.status(400).json({ error: err.message });
+        console.error(err);
+        res.status(400).json({ error: err.message });
     }
 };

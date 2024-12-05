@@ -9,25 +9,25 @@ const couponSchema = new mongoose.Schema({
   discount: {
     type: Number,
     required: true,
+    min: 0, // Discount amount
+  },
+  minCartPrice: {
+    type: Number,
+    required: true, // Minimum cart price required to use this coupon
     min: 0,
   },
   adminId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true, // Ensure the coupon is associated with a admin
+    required: true, // Ensure the coupon is associated with an admin
   },
   validity: {
     type: Date,
-    required: true,
-  },
-  minItemCount: {
-    type: Number,
-    required: true,
-    min: 0, // Minimum items required to apply this coupon
+    required: true, // Expiry date of the coupon
   },
   description: {
     type: String,
-    required: true, // Make description required
+    required: true, // Description of the coupon
   },
   createdAt: {
     type: Date,

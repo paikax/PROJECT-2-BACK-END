@@ -6,7 +6,9 @@ const moment = require("moment");
 const config = require("config");
 const querystring = require("querystring");
 const crypto = require("crypto"); // Import crypto module
+const Coupon = require("../models/Coupon");
 const router = express.Router();
+
 const {
   vnp_TmnCode,
   vnp_HashSecret,
@@ -237,8 +239,8 @@ router.post("/vnpay-checkout", verifyToken, async function (req, res, next) {
     req.connection.socket.remoteAddress;
 
   const userId = req.user.id;
+  const { deliveryAddress, bankCode, language } = req.body;
 
-  const { deliveryAddress } = req.body;
   if (!deliveryAddress) {
     return res.status(400).json({ error: "Delivery address is required." });
   }
@@ -246,13 +248,11 @@ router.post("/vnpay-checkout", verifyToken, async function (req, res, next) {
   // Fetch the user's shopping cart
   const cart = await cartService.getCart(userId);
   if (!cart || cart.items.length === 0) {
-    return res
-      .status(400)
-      .json({ error: "Cart is empty. Cannot place an order." });
+    return res.status(400).json({ error: "Cart is empty. Cannot place an order." });
   }
 
   // Calculate total price
-  const totalPrice = Math.round(
+  let totalPrice = Math.round(
     cart.items.reduce((sum, item) => {
       const variantPrice = item.variantDetails
         ? parseFloat(item.variantDetails.price)
@@ -261,19 +261,38 @@ router.post("/vnpay-checkout", verifyToken, async function (req, res, next) {
     }, 0)
   );
 
+ // Check if a coupon is applied from the cart
+ if (cart.appliedCoupon) {
+  couponCode = cart.appliedCoupon; // Get the coupon code from the cart
+  const coupon = await Coupon.findOne({ code: couponCode, validity: { $gte: new Date() } });
+
+  if (coupon) {
+    if (totalPrice >= coupon.minCartPrice) {
+      discount = coupon.discount; // Apply the coupon discount
+    } else {
+      return res.status(400).json({
+        error: `Coupon requires a minimum cart price of ${coupon.minCartPrice}. Your cart total is ${totalPrice}.`,
+      });
+    }
+  } else {
+    return res.status(400).json({ error: "Invalid or expired coupon code." });
+  }
+}
+
+const finalPrice = totalPrice - discount;
+
+
+  // Adjust totalPrice based on coupon discount
+  totalPrice -= discount; // Adjust if discount is a fixed amount or percentage
+
   let tmnCode = vnp_TmnCode; // Use config file
   let secretKey = vnp_HashSecret; // Use config file
   let vnpUrl = vnp_Url; // Use config file
   let returnUrl = vnp_ReturnUrl; // Use config file
   let orderId = moment(date).format("DDHHmmss");
 
-  let amount = totalPrice;
-  let bankCode = req.body.bankCode;
-
-  let locale = req.body.language;
-  if (locale === null || locale === "") {
-    locale = "vn";
-  }
+  let amount = finalPrice;
+  let locale = language || "vn"; // Default to Vietnamese if not provided
   let currCode = "VND";
   let vnp_Params = {};
   vnp_Params["vnp_Version"] = "2.1.0";
@@ -282,14 +301,14 @@ router.post("/vnpay-checkout", verifyToken, async function (req, res, next) {
   vnp_Params["vnp_Locale"] = locale;
   vnp_Params["vnp_CurrCode"] = currCode;
   vnp_Params["vnp_TxnRef"] = orderId;
-  vnp_Params["vnp_OrderInfo"] = "Thanh toan cho ma GD:" + orderId;
+  vnp_Params["vnp_OrderInfo"] = "Payment for order ID:" + orderId;
   vnp_Params["vnp_OrderType"] = "other";
-  vnp_Params["vnp_Amount"] = amount * 100;
+  vnp_Params["vnp_Amount"] = amount * 100; // VNPay expects amount in cents
   vnp_Params["vnp_ReturnUrl"] = returnUrl;
   vnp_Params["vnp_IpAddr"] = ipAddr;
   vnp_Params["vnp_CreateDate"] = createDate;
 
-  if (bankCode !== null && bankCode !== "") {
+  if (bankCode) {
     vnp_Params["vnp_BankCode"] = bankCode;
   }
 
@@ -305,6 +324,8 @@ router.post("/vnpay-checkout", verifyToken, async function (req, res, next) {
 
   return res.status(200).json({
     vnpUrl,
+    couponCode, // Optionally include the applied coupon code in the response
+    discount,   // Optionally include the discount amount applied
   });
 });
 
@@ -350,78 +371,84 @@ router.get("/vnpay_success", verifyToken, async function (req, res, next) {
   delete vnp_Params["vnp_SecureHashType"];
 
   vnp_Params = sortObject(vnp_Params);
-
   let secretKey = vnp_HashSecret;
 
-  let querystring = require("qs");
   let signData = querystring.stringify(vnp_Params, { encode: false });
-  let crypto = require("crypto");
   let hmac = crypto.createHmac("sha512", secretKey);
   let signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
 
   if (secureHash === signed) {
     if (!userId) {
-      // Handle scenario where user ID is not found
-      return res
-        .status(400)
-        .json({ error: "User ID not found. Unable to process the order." });
+      return res.status(400).json({ error: "User ID not found. Unable to process the order." });
     }
+    
     const cart = await cartService.getCart(userId);
-
-    if (cart && cart.items.length > 0) {
-      const totalQuantity = cart.items.reduce(
-        (sum, item) => sum + item.count,
-        0
-      );
-
-      // Calculate total price based on variant prices
-      const totalPrice = Math.round(
-        cart.items.reduce((sum, item) => {
-          const variantPrice = item.variantDetails
-            ? parseFloat(item.variantDetails.price)
-            : parseFloat(item.product.price);
-          return sum + item.count * variantPrice;
-        }, 0)
-      );
-
-      const orderItems = cart.items.map((item) => ({
-        productId: item.product, // Assuming item.product is the product ID
-        variantId: item.variantId, // Assuming item.variantId is the variant ID (if applicable)
-        quantity: item.count,
-        price: item.variantDetails
-          ? parseFloat(item.variantDetails.price)
-          : parseFloat(item.product.price), // Use variant price if available
-      }));
-
-      const order = new Order({
-        userId: userId,
-        status: "Pending",
-        paymentStatus: "Paid", // Set to Paid since payment is successful
-        totalQuantity: totalQuantity,
-        totalPrice: totalPrice, // Use the calculated total price here
-        deliveryAddress: cart.deliveryAddress || "Default Address", // Adjust as needed
-        orderItems: orderItems,
-      });
-
-      await order.save();
-      await cartService.clearCart(userId); // Clear the cart after creating the order
-
-      // Send order details as a JSON response
-      return res.status(200).json({
-        message: "Payment successful",
-        order: {
-          id: order._id,
-          totalQuantity: order.totalQuantity,
-          totalPrice: order.totalPrice, // Ensure this reflects the correct total price
-          deliveryAddress: order.deliveryAddress,
-          status: order.status,
-          paymentStatus: order.paymentStatus,
-          orderItems: order.orderItems,
-        },
-      });
-    } else {
-      return res.status(400).json({ error: "Cart is empty" });
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({ error: "Cart is empty." });
     }
+
+    const totalQuantity = cart.items.reduce((sum, item) => sum + item.count, 0);
+    
+    // Calculate total price based on variant prices
+    const totalPrice = Math.round(
+      cart.items.reduce((sum, item) => {
+        const variantPrice = item.variantDetails
+          ? parseFloat(item.variantDetails.price)
+          : parseFloat(item.product.price);
+        return sum + item.count * variantPrice;
+      }, 0)
+    );
+
+    const orderItems = cart.items.map((item) => ({
+      productId: item.product,
+      variantId: item.variantId,
+      quantity: item.count,
+      price: item.variantDetails
+        ? parseFloat(item.variantDetails.price)
+        : parseFloat(item.product.price),
+    }));
+
+    // Handle coupon if applicable
+    let couponCode = vnp_Params["couponCode"]; // Extract coupon code from query params
+    let discount = 0;
+
+    if (couponCode) {
+      const coupon = await couponController.getCouponByCode(couponCode); // Fetch coupon
+      if (coupon && new Date(coupon.validity) >= new Date()) {
+        discount = coupon.discount; // Apply discount if valid
+      }
+    }
+
+    // Adjust total price based on coupon discount
+    const finalPrice = totalPrice - discount;
+
+    const order = new Order({
+      userId: userId,
+      status: "Pending",
+      paymentStatus: "Paid",
+      totalQuantity: totalQuantity,
+      totalPrice: finalPrice,
+      deliveryAddress: cart.deliveryAddress || "Default Address",
+      orderItems: orderItems,
+      couponCode: couponCode || null, // Save coupon code used
+    });
+
+    await order.save();
+    await cartService.clearCart(userId); // Clear the cart after creating the order
+
+    return res.status(200).json({
+      message: "Payment successful",
+      order: {
+        id: order._id,
+        totalQuantity: order.totalQuantity,
+        totalPrice: order.totalPrice,
+        deliveryAddress: order.deliveryAddress,
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+        orderItems: order.orderItems,
+        couponCode: order.couponCode, // Include coupon code in the response
+      },
+    });
   } else {
     return res.status(400).json({ error: "Invalid signature" });
   }

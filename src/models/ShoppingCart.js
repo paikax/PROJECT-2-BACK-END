@@ -7,8 +7,8 @@ const cartItemSchema = new mongoose.Schema({
     required: true,
   },
   variantId: {
-    type: String, // Store only the variantId as a string
-    required: false, // Optional if no variants are selected
+    type: String,
+    required: false,
   },
   count: {
     type: Number,
@@ -26,7 +26,9 @@ const shoppingCartSchema = new mongoose.Schema(
       unique: true,
     },
     items: [cartItemSchema],
-    deliveryAddress: { type: String}, // New field
+    deliveryAddress: { type: String },
+    appliedCoupon: { type: String, default: null },
+    discountedTotal: { type: Number, default: 0 }, // New field for the discounted total price
   },
   { timestamps: true }
 );
