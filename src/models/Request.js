@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const RequestSchema = new mongoose.Schema({
-  type: { type: String, enum: ['product', 'user', 'category', 'brand'], required: true },  // Loại yêu cầu
-  targetId: { type: mongoose.Schema.Types.ObjectId, required: true },  // ID của đối tượng (Product, User, Category, Brand)
+  type: { type: String, enum: ['product', 'user'], required: true },  // Loại yêu cầu
+  targetId: { type: mongoose.Schema.Types.ObjectId, required: true },  // ID của đối tượng (Product, User)
   title: {
     type: String,
     required: true, 

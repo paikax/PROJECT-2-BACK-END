@@ -15,13 +15,13 @@ const orderSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   status: {
     type: String,
-    enum: ["Pending", "Shipped", "Delivered", "Cancelled"],
+    enum: ["Pending", "Shipping", "Delivered", "Cancelled"],
     default: "Pending",
   },
   paymentStatus: {
     type: String,
     enum: ["Unpaid", "Paid", "Refunded"],
-    default: "Unpaid", // New field to track payment status
+    default: "Unpaid",
   },
   totalQuantity: { type: Number, required: true },
   totalPrice: { type: Number, required: true },
@@ -31,6 +31,7 @@ const orderSchema = new mongoose.Schema({
   reason: { type: String },
   refundAmount: { type: Number, default: 0 },
   couponCode: { type: String, default: null },
+  discountAmount: { type: Number, default: 0 }, // Save the applied discount amount
 });
 
 module.exports = mongoose.model("Order", orderSchema);

@@ -1,4 +1,5 @@
 const productService = require("../services/productService");
+const jwt = require("jsonwebtoken"); // Đảm bảo đã cài đặt thư viện này
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 // Create Product
@@ -34,32 +35,20 @@ exports.createProduct = async (req, res) => {
 };
 
 // Get all products
+
 exports.getAllProducts = async (req, res) => {
-    try {
-      let userRole = "guest"; // Mặc định là guest
-  
-      // Kiểm tra token trong header Authorization
-      const authHeader = req.headers.authorization;
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        const token = authHeader.split(" ")[1];
-        try {
-          // Giải mã token để lấy role
-          const decoded = jwt.verify(token, process.env.JWT_SECRET); // Đảm bảo `JWT_SECRET` đúng
-          userRole = decoded.role || "guest";
-        } catch (err) {
-          console.warn("Token verification failed:", err.message);
-        }
-      }
-  
-      // Base query (dành cho từng loại người dùng)
-      let query = {};
-      if (["admin", "seller"].includes(userRole)) {
-        query["verify.status"] = { $in: ["approved", "pending"] };
-      } else if (["guest", "user"].includes(userRole)) {
-        query["verify.status"] = "approved";
-      }
-  
-      // Các filter khác như trước
+  try {
+    const userRole = req.user ? req.user.role : "guest";
+
+    // Base query (dành cho từng loại người dùng)
+    let query = {};
+    if (userRole === "admin" || userRole === "seller") {
+      query["verify.status"] = { $in: ["approved", "pending"] };
+    } else {
+      query["verify.status"] = "approved";
+    }
+
+    // Lấy các filter từ query string
     const {
       category,
       brand,
@@ -72,33 +61,42 @@ exports.getAllProducts = async (req, res) => {
       status,
     } = req.query;
 
-    // 1. Filter category (theo ID hoặc tên)
+    // Apply filters (no change here)
     if (category) {
       const categories = category.split(",");
       query.$or = query.$or || [];
-      const categoryIds = categories.filter(id => mongoose.isValidObjectId(id));
-      const categoryNames = categories.filter(name => !mongoose.isValidObjectId(name));
-      if (categoryIds.length) query.$or.push({ categoryId: { $in: categoryIds } });
+      const categoryIds = categories.filter((id) =>
+        mongoose.isValidObjectId(id)
+      );
+      const categoryNames = categories.filter(
+        (name) => !mongoose.isValidObjectId(name)
+      );
+      if (categoryIds.length)
+        query.$or.push({ categoryId: { $in: categoryIds } });
       if (categoryNames.length) {
-        const categoryDocs = await Category.find({ name: { $in: categoryNames } });
-        query.$or.push({ categoryId: { $in: categoryDocs.map(cat => cat._id) } });
+        const categoryDocs = await Category.find({
+          name: { $in: categoryNames },
+        });
+        query.$or.push({
+          categoryId: { $in: categoryDocs.map((cat) => cat._id) },
+        });
       }
     }
 
-    // 2. Filter brand (theo ID hoặc tên)
     if (brand) {
       const brands = brand.split(",");
       query.$or = query.$or || [];
-      const brandIds = brands.filter(id => mongoose.isValidObjectId(id));
-      const brandNames = brands.filter(name => !mongoose.isValidObjectId(name));
+      const brandIds = brands.filter((id) => mongoose.isValidObjectId(id));
+      const brandNames = brands.filter(
+        (name) => !mongoose.isValidObjectId(name)
+      );
       if (brandIds.length) query.$or.push({ brandId: { $in: brandIds } });
       if (brandNames.length) {
         const brandDocs = await Brand.find({ name: { $in: brandNames } });
-        query.$or.push({ brandId: { $in: brandDocs.map(br => br._id) } });
+        query.$or.push({ brandId: { $in: brandDocs.map((br) => br._id) } });
       }
     }
 
-    // 3. Filter keyword (bao gồm name, description, sellerId.fullName)
     if (keyword) {
       query.$or = query.$or || [];
       query.$or.push(
@@ -108,31 +106,31 @@ exports.getAllProducts = async (req, res) => {
       );
     }
 
-    // 4. Filter price
     if (price) {
       const [minPrice, maxPrice] = price.split(",");
       query.price = { $gte: parseFloat(minPrice), $lte: parseFloat(maxPrice) };
     }
 
-    
-    // 6. Filter rating (theo khoảng)
     if (rating) {
       const [minRating, maxRating] = rating.split(",");
-      query.rating = { $gte: parseFloat(minRating), $lte: parseFloat(maxRating) };
+      query.rating = {
+        $gte: parseFloat(minRating),
+        $lte: parseFloat(maxRating),
+      };
     }
 
-    // 7. Filter variant (option và color nested trong variants.attributes)
     if (variant) {
       query["variants.attributes"] = { $regex: variant, $options: "i" };
     }
 
-    // 8. Filter views (khoảng giá trị)
     if (views) {
       const [minViews, maxViews] = views.split(",");
-      query.views = { $gte: parseInt(minViews, 10), $lte: parseInt(maxViews, 10) };
+      query.views = {
+        $gte: parseInt(minViews, 10),
+        $lte: parseInt(maxViews, 10),
+      };
     }
 
-    // 9. Filter createdAt (thời gian tạo sản phẩm)
     if (createdAt) {
       const [startDate, endDate] = createdAt.split(",");
       query.createdAt = {
@@ -141,11 +139,15 @@ exports.getAllProducts = async (req, res) => {
       };
     }
 
+    // 10. Filter sellerProductFilter và status
+    if (sellerProductFilter === "true" && req.user) {
+      query.sellerId = req.user._id;
+    }
     if (status) {
       query["verify.status"] = status;
     }
 
-    // Lấy sản phẩm theo query và gửi phản hồi
+    // Fetch and send products
     const products = await productService.getAllProducts(query);
     res.status(200).json({ success: true, data: products });
   } catch (err) {
@@ -153,14 +155,12 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
-  /* 
+/* 
     1. hien tai chi filter dc san pham co A hoac B chu khong phai ca A va B
     2. chua filter duoc sellerId.fullName trong keyword va variant color, attribute. Chua filter duoc nhieu keyword 
     3. price,view, hoat dong bat thuong. Mot san pham co gia 94.36 khi nhap 1, => doi string thanh float trong model
     
   */
-  
-  
 
 exports.getProduct = async (req, res) => {
   try {
@@ -242,5 +242,22 @@ exports.reportProduct = async (req, res) => {
     res.status(200).json({ message: "Product reported successfully.", report });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+};
+
+exports.fetchVariantDetails = async (req, res) => {
+  try {
+    const { variantId } = req.params; // Expecting the variantId as a route parameter
+    const variant = await productService.getVariantDetails(variantId);
+
+    return res.status(200).json({
+      success: true,
+      variant,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

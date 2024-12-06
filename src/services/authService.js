@@ -140,25 +140,30 @@ exports.getUserByEmail = async (email) => {
 };
 
 // Register a user with Google details
-exports.registerUserFromGoogle = async (email) => {
+exports.registerUserFromGoogle = async (email, name, picture) => {
   try {
+    // Check if the user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
       throw new Error("User already exists.");
     }
 
+    // Create a new user with no password, as it's a Google login
     const newUser = new User({
       email,
-      fullName: email.split("@")[0], // Default username based on email prefix
-      password: "Password123@", // Placeholder password
+      password: "HASSPASSWORD",
+      fullName: name, // Default username based on email prefix
       role: "user", // Default role
-      isConfirmed: true,
-      isActive: true,
+      isConfirmed: true, // User is confirmed by default (since it's Google login)
+      isActive: true, // User is active by default
+      imageUrl: picture, // You can add the Google profile picture URL if available
     });
 
+    // Save the new user
     await newUser.save();
+
     return newUser;
   } catch (err) {
-    throw new Error("Failed to register user with Google.");
+    throw new Error("Failed to register user with Google: " + err.message);
   }
 };

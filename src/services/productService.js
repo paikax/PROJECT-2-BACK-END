@@ -1,6 +1,7 @@
 const Product = require("../models/Product");
 const ProductReport = require("../models/ProductReport");
 const User = require("../models/User");
+const RequestService = require('../services/requestService');
 
 exports.createProduct = async ({
   sellerId,
@@ -37,21 +38,35 @@ exports.createProduct = async ({
   const product = new Product({
     sellerId,
     name,
-    originalPrice: price, // Set originalPrice to the input price
+    originalPrice: price,
     price: price,
     description,
     imageUrls,
     variants: variants.map((variant) => ({
-      originalPrice: variant.price, // Set originalPrice as the variant price
-      price: variant.price, // Set the price for the variant
+      originalPrice: variant.price,
+      price: variant.price,
       stockQuantity: variant.stockQuantity,
-      attributes: variant.attributes, // Dynamic attributes will now be supported
+      attributes: variant.attributes,
     })),
     categoryId,
     brandId,
   });
 
   await product.save();
+
+  // Create a request for the new product
+  const request = await RequestService.createRequest({
+    type: 'product',
+    targetId: product._id,
+    title: `Request for new product: ${name}`,
+    reason: `A new product has been created by seller ${sellerId}.`,
+    createdBy: sellerId,
+  });
+
+  // Update the product with the requestId
+  product.verify.requestId = request._id;
+  await product.save();
+
   return product;
 };
 
@@ -202,4 +217,26 @@ exports.updateVerifyStatus = async (id, updates) => {
   if (!target) throw new Error("Target not found");
   target.verify = updates.verify;
   await target.save();
+};
+
+exports.getVariantDetails = async (variantId) => {
+  try {
+    // Find the product where the variant ID exists
+    const product = await Product.findOne({ "variants._id": variantId });
+
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    // Find the variant within the product by its variantId
+    const variant = product.variants.id(variantId);
+
+    if (!variant) {
+      throw new Error("Variant not found");
+    }
+
+    return variant;
+  } catch (error) {
+    throw new Error(error.message);
+  }
 };
