@@ -1,7 +1,7 @@
 const Product = require("../models/Product");
 const ProductReport = require("../models/ProductReport");
 const User = require("../models/User");
-const RequestService = require('../services/requestService');
+const RequestService = require("../services/requestService");
 
 exports.createProduct = async ({
   sellerId,
@@ -56,7 +56,7 @@ exports.createProduct = async ({
 
   // Create a request for the new product
   const request = await RequestService.createRequest({
-    type: 'product',
+    type: "product",
     targetId: product._id,
     title: `Request for new product: ${name}`,
     reason: `A new product has been created by seller ${sellerId}.`,
@@ -111,18 +111,37 @@ exports.getProductById = async (id) => {
 };
 
 // Update a Product
+// Update a Product
 exports.updateProduct = async (id, updates) => {
   const product = await Product.findById(id);
   if (!product) throw new Error("Product not found");
 
   Object.assign(product, updates);
 
-  // Update nested fields like variants explicitly, if provided
+  // Update variants and handle their changes
   if (updates.variants) {
     product.variants = updates.variants.map((variant, index) => {
       const existingVariant = product.variants[index] || {};
       return { ...existingVariant, ...variant };
     });
+  }
+
+  // Validate and update price fields if necessary
+  if (updates.price) {
+    const price = parseFloat(updates.price);
+    if (isNaN(price) || price < 0) {
+      throw new Error("Invalid product price");
+    }
+    product.price = price;
+  }
+
+  // Validate and update original price if necessary
+  if (updates.originalPrice) {
+    const originalPrice = parseFloat(updates.originalPrice);
+    if (isNaN(originalPrice) || originalPrice < 0) {
+      throw new Error("Invalid original price");
+    }
+    product.originalPrice = originalPrice;
   }
 
   await product.save();

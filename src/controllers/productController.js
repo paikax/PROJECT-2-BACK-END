@@ -182,12 +182,26 @@ exports.getProduct = async (req, res) => {
 };
 
 // Update Product
+// Update Product
 exports.updateProduct = async (req, res) => {
   try {
     const updates = {
       ...req.body,
       updatedAt: new Date(),
     };
+
+    // Ensure price and variant validations before updating
+    if (updates.variants) {
+      updates.variants.forEach((variant, index) => {
+        const variantPrice = variant.price;
+        if (isNaN(variantPrice) || variantPrice < 0) {
+          return res.status(400).json({
+            error: `Invalid variant price at index ${index}: ${variantPrice}`,
+          });
+        }
+      });
+    }
+
     const product = await productService.updateProduct(req.params.id, updates);
     res.status(200).json(product);
   } catch (err) {

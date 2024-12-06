@@ -160,7 +160,7 @@ router.get("/products/:id", productController.getProduct);
 /**
  * @swagger
  * /products/{id}:
- *   put:
+ *   path:
  *     summary: Update a product by ID
  *     tags: [Products]
  *     security:
@@ -181,17 +181,49 @@ router.get("/products/:id", productController.getProduct);
  *             properties:
  *               name:
  *                 type: string
+ *                 description: Name of the product
  *               description:
  *                 type: string
+ *                 description: Description of the product
  *               price:
  *                 type: number
+ *                 description: Price of the product
+ *                 example: 199.99
+ *               imageUrls:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of image URLs
+ *               variants:
+ *                 type: array
+ *                 description: Product variants
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     price:
+ *                       type: number
+ *                       description: Price of the variant
+ *                     stockQuantity:
+ *                       type: number
+ *                       description: Stock quantity of the variant
+ *                     attributes:
+ *                       type: object
+ *                       additionalProperties:
+ *                         type: string
+ *                       description: Dynamic object for variant attributes (e.g., ram, color)
  *               categoryId:
  *                 type: string
+ *                 description: ID of the category the product belongs to
  *               brandId:
  *                 type: string
+ *                 description: ID of the brand the product belongs to
  *               rating:
  *                 type: number
  *                 description: Updated product rating (0-5)
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive]
+ *                 description: Updated product status (active/inactive)
  *     responses:
  *       200:
  *         description: Product updated successfully
@@ -204,7 +236,7 @@ router.get("/products/:id", productController.getProduct);
  *       404:
  *         description: Product not found
  */
-router.put(
+router.patch(
   "/products/:id",
   verifyToken,
   authorizeRole("seller"),
