@@ -72,6 +72,8 @@ exports.getAllProducts = async (req, res) => {
       createdAt,
       sellerProductFilter,
       status,
+      skip = 0, // Skip products (default 0)
+      limit = 8, // Limit products per request (default 8)
     } = req.query;
 
     // Apply filters (no change here)
@@ -158,8 +160,6 @@ exports.getAllProducts = async (req, res) => {
     if (status) {
       query["verify.status"] = status;
     }
-
-    const { skip = 0, limit = 8 } = req.query;
 
     // Fetch and send products
     const products = await productService.getAllProducts(
