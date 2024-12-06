@@ -1,7 +1,6 @@
 const productService = require("../services/productService");
 const jwt = require("jsonwebtoken"); // Đảm bảo đã cài đặt thư viện này
 const mongoose = require("mongoose");
-const jwt = require("jsonwebtoken");
 // Create Product
 exports.createProduct = async (req, res) => {
   try {
@@ -53,9 +52,9 @@ exports.getAllProducts = async (req, res) => {
     }
     // Base query (dành cho từng loại người dùng)
     let query = {};
-    if (userRole === "admin" || userRole === "seller") {
-      query["verify.status"] = { $in: ["approved", "pending","rejected"] };
-    } else {
+    if (["admin", "seller"].includes(userRole)) {
+        query["verify.status"] = { $in: ["approved", "pending", "rejected"] };
+      } else if (["guest", "user"].includes(userRole)) {
       query["verify.status"] = "approved";
     }
     // Extract filters from query string
