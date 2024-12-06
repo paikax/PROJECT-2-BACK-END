@@ -59,14 +59,18 @@ exports.login = async (req, res) => {
 
 exports.googleLogin = async (req, res) => {
   try {
-    const { email } = req.body; // Extract email from the Google token
+    const { email, name, picture } = req.body; // Extract email from the Google token
 
     // Check if user exists
     const user = await authService.getUserByEmail(email);
 
     if (!user) {
       // User doesn't exist, register new user
-      const newUser = await authService.registerUserFromGoogle(email);
+      const newUser = await authService.registerUserFromGoogle(
+        email,
+        name,
+        picture
+      );
       if (!newUser) {
         return res.status(400).json({ error: "Error registering the user." });
       }

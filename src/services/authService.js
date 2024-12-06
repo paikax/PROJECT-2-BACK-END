@@ -140,7 +140,7 @@ exports.getUserByEmail = async (email) => {
 };
 
 // Register a user with Google details
-exports.registerUserFromGoogle = async (email) => {
+exports.registerUserFromGoogle = async (email, name, picture) => {
   try {
     // Check if the user already exists
     const userExists = await User.findOne({ email });
@@ -151,11 +151,12 @@ exports.registerUserFromGoogle = async (email) => {
     // Create a new user with no password, as it's a Google login
     const newUser = new User({
       email,
-      fullName: email.split("@")[0], // Default username based on email prefix
+      password: "HASSPASSWORD",
+      fullName: name, // Default username based on email prefix
       role: "user", // Default role
       isConfirmed: true, // User is confirmed by default (since it's Google login)
       isActive: true, // User is active by default
-      imageUrl: "", // You can add the Google profile picture URL if available
+      imageUrl: picture, // You can add the Google profile picture URL if available
     });
 
     // Save the new user
