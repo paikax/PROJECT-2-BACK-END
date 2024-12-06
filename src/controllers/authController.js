@@ -76,9 +76,6 @@ exports.googleLogin = async (req, res) => {
           id: newUser._id,
           fullName: newUser.fullName,
           email: newUser.email,
-          phone: newUser.phone,
-          address: newUser.address,
-          gender: newUser.gender,
           role: newUser.role,
           imageUrl: newUser.imageUrl,
         },
@@ -98,9 +95,33 @@ exports.googleLogin = async (req, res) => {
       return res.status(201).json({ accessToken, refreshToken });
     }
 
-    // User exists, log in and return token
-    const token = await authService.loginUser(email, "Password123@"); // use a placeholder password
-    res.status(200).json({ token });
+    // If user exists, just return a token for the logged-in user
+    const accessToken = jwt.sign(
+      {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        address: user.address,
+        gender: user.gender,
+        role: user.role,
+        imageUrl: user.imageUrl,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "3d" }
+    );
+
+    const refreshToken = jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return res.status(200).json({ accessToken, refreshToken });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
