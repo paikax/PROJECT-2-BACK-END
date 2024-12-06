@@ -38,17 +38,27 @@ exports.createProduct = async (req, res) => {
 
 exports.getAllProducts = async (req, res) => {
   try {
-    const userRole = req.user ? req.user.role : "guest";
-
+    let userRole = "guest"; // Mặc định là guest
+    // Kiểm tra token trong header Authorization
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      try {
+        // Giải mã token để lấy role
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); // Đảm bảo `JWT_SECRET` đúng
+        userRole = decoded.role || "guest";
+      } catch (err) {
+        console.warn("Token verification failed:", err.message);
+      }
+    }
     // Base query (dành cho từng loại người dùng)
     let query = {};
     if (userRole === "admin" || userRole === "seller") {
-      query["verify.status"] = { $in: ["approved", "pending"] };
+      query["verify.status"] = { $in: ["approved", "pending","rejected"] };
     } else {
       query["verify.status"] = "approved";
     }
-
-    // Lấy các filter từ query string
+    // Extract filters from query string
     const {
       category,
       brand,
@@ -139,9 +149,8 @@ exports.getAllProducts = async (req, res) => {
       };
     }
 
-    // 10. Filter sellerProductFilter và status
-    if (sellerProductFilter === "true" && req.user) {
-      query.sellerId = req.user._id;
+    if (sellerProductFilter === "true" && req.query.sellerId) {
+      query.sellerId = req.query.sellerId;
     }
     if (status) {
       query["verify.status"] = status;
