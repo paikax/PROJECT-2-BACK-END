@@ -76,6 +76,8 @@ exports.googleLogin = async (req, res) => {
           id: newUser._id,
           fullName: newUser.fullName,
           email: newUser.email,
+          address: newUser.address,
+          gender: newUser.gender,
           role: newUser.role,
           imageUrl: newUser.imageUrl,
         },
