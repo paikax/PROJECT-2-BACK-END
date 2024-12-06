@@ -4,9 +4,10 @@ const cartService = require("../services/cartService");
 const Order = require("../models/Order");
 const Coupon = require("../models/Coupon");
 
+// Create a checkout session for Pay Now
 exports.createCheckoutSession = async (req, res) => {
   try {
-    const { deliveryAddress } = req.body; // Only require deliveryAddress
+    const { deliveryAddress } = req.body;
     const userId = req.user.id;
 
     const cart = await cartService.getCart(userId);
@@ -14,7 +15,6 @@ exports.createCheckoutSession = async (req, res) => {
       return res.status(400).json({ error: "Cart is empty. Cannot place an order." });
     }
 
-    // Calculate total price
     const totalPrice = cart.items.reduce((sum, item) => {
       const variantPrice = item.variantDetails
         ? parseFloat(item.variantDetails.price || 0)
@@ -48,8 +48,8 @@ exports.createCheckoutSession = async (req, res) => {
     // Create the order
     const order = new Order({
       userId: userId,
-      status: "Pending",
-      paymentStatus: "Unpaid",
+      status: "Pending", // Set initial status to Pending
+      paymentStatus: "Unpaid", // Initially unpaid
       totalQuantity: cart.items.reduce((sum, item) => sum + item.count, 0),
       totalPrice: finalPrice,
       deliveryAddress: deliveryAddress,
@@ -69,33 +69,56 @@ exports.createCheckoutSession = async (req, res) => {
 
     res.status(200).json({ url: sessionUrl, orderId: order._id });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// paymentController.js (handling successful payment return)
+// Payment Success Handler
 exports.paymentSuccess = async (req, res) => {
   try {
-    const { session_id } = req.query; // Extract session_id from the URL
-
-    // Retrieve session details from Stripe
+    const { session_id } = req.query;
     const session = await stripe.checkout.sessions.retrieve(session_id);
 
     // Get the orderId from the session metadata
     const orderId = session.metadata.orderId;
 
-    // Update the order status to 'Paid'
     await Order.findByIdAndUpdate(orderId, {
       paymentStatus: "Paid",
-      status: "Processing", // You can update the status to Processing or any other appropriate status
+      status: "Delivered", // Change status to Delivered
     });
 
     // Clear the cart for the user
     await cartService.clearCart(req.user.id);
 
-    // Send confirmation response
-    res.status(200).json({ message: "Payment successful. Order created." });
+    res.status(200).json({ message: "Payment successful. Order delivered." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Pay for an order after delivery
+exports.payForOrder = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+    const userId = req.user.id;
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found." });
+    }
+
+    if (order.userId.toString() !== userId) {
+      return res.status(403).json({ error: "You are not authorized to pay for this order." });
+    }
+
+    if (order.paymentStatus === "Paid") {
+      return res.status(400).json({ error: "Order is already paid." });
+    }
+
+    const sessionUrl = await paymentService.createCheckoutSession(userId, orderId);
+
+    res.status(200).json({ url: sessionUrl });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
