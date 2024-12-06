@@ -1,6 +1,7 @@
 const productService = require("../services/productService");
 const jwt = require("jsonwebtoken"); // Đảm bảo đã cài đặt thư viện này
 const mongoose = require("mongoose");
+const Product = require("../models/Product");
 
 // Create Product
 exports.createProduct = async (req, res) => {
@@ -58,6 +59,7 @@ exports.getAllProducts = async (req, res) => {
     } else if (["guest", "user"].includes(userRole)) {
       query["verify.status"] = "approved";
     }
+
     // Extract filters from query string
     const {
       category,
@@ -157,9 +159,19 @@ exports.getAllProducts = async (req, res) => {
       query["verify.status"] = status;
     }
 
+    const { skip = 0, limit = 8 } = req.query;
+
     // Fetch and send products
-    const products = await productService.getAllProducts(query);
-    res.status(200).json({ success: true, data: products });
+    const products = await productService.getAllProducts(
+      query,
+      parseInt(skip),
+      parseInt(limit)
+    );
+
+    // Count total products to help with infinite scroll end condition
+    const totalProducts = await Product.countDocuments(query);
+
+    res.status(200).json({ success: true, data: products, totalProducts });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

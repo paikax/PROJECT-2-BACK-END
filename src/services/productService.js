@@ -70,9 +70,11 @@ exports.createProduct = async ({
   return product;
 };
 
-exports.getAllProducts = async (query) => {
+exports.getAllProducts = async (query, skip, limit) => {
   try {
     return await Product.find(query)
+      .skip(skip) // Skip already loaded products
+      .limit(limit) // Limit to the number of products requested
       .populate("sellerId", "fullName")
       .populate("categoryId", "name")
       .populate("brandId", "name");
