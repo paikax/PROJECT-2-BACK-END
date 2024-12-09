@@ -265,9 +265,12 @@ router.post(
       }, 0)
     );
 
+    // Initialize discount to 0
+    let discount = 0;
+
     // Check if a coupon is applied from the cart
     if (cart.appliedCoupon) {
-      couponCode = cart.appliedCoupon; // Get the coupon code from the cart
+      const couponCode = cart.appliedCoupon; // Get the coupon code from the cart
       const coupon = await Coupon.findOne({
         code: couponCode,
         validity: { $gte: new Date() },
@@ -288,11 +291,10 @@ router.post(
       }
     }
 
+    // Calculate final price after discount
     const finalPrice = totalPrice - discount;
 
-    // Adjust totalPrice based on coupon discount
-    totalPrice -= discount; // Adjust if discount is a fixed amount or percentage
-
+    // VNPay configuration and logic
     let tmnCode = vnp_TmnCode; // Use config file
     let secretKey = vnp_HashSecret; // Use config file
     let vnpUrl = vnp_Url; // Use config file
@@ -332,8 +334,8 @@ router.post(
 
     return res.status(200).json({
       vnpUrl,
-      couponCode, // Optionally include the applied coupon code in the response
-      discount, // Optionally include the discount amount applied
+      couponCode: cart.appliedCoupon || null, // Optionally include the applied coupon code in the response
+      discount, // Include the discount amount applied
     });
   }
 );
