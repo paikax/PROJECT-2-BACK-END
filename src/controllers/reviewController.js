@@ -1,24 +1,32 @@
 const Review = require("../models/Review");
 const Product = require("../models/Product");
 const Order = require("../models/Order"); // Ensure you import the Order model
+const mongoose = require("mongoose");
 
 // Create a Review
 exports.createReview = async (req, res) => {
   try {
     const { productId, rating, comment } = req.body;
 
-    // Check if the user has paid for the product
+    console.log("User ID:", req.user.id);
+    console.log("Product ID:", productId);
+    
     const order = await Order.findOne({
-      userId: req.user.id,
-      "orderItems.productId": productId,
-      paymentStatus: "Paid",
-    });
-
+        userId: new mongoose.Types.ObjectId(req.user.id),
+        "orderItems.productId": new mongoose.Types.ObjectId(productId),
+        paymentStatus: "Paid",
+        
+      });
+      
+      if (!mongoose.Types.ObjectId.isValid(req.user.id) || !mongoose.Types.ObjectId.isValid(productId)) {
+        return res.status(400).json({ error: "Invalid ID format" });
+      }
+      
     if (!order) {
-      return res
-        .status(403)
-        .json({ error: "You must purchase the product before reviewing." });
+      console.log("No order found for the given criteria.");
+      return res.status(403).json({ error: "You must purchase the product before reviewing." });
     }
+    
 
     const review = new Review({
       userId: req.user.id,
