@@ -80,6 +80,10 @@ router.post(
  *       500:
  *         description: Internal server error
  */
-router.get("/stripe-success", verifyToken, paymentController.paymentSuccess);
+router.get(
+  "/payment/stripe-success",
+  verifyToken,
+  paymentController.paymentSuccess
+);
 
 module.exports = router;

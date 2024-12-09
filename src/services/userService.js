@@ -35,6 +35,7 @@ exports.getUserById = async (userId) => {
 exports.updateUser = async (userId, updateData) => {
   try {
     const user = await User.findById(userId);
+    console.log("user ", user);
     if (!user) throw new Error("User not found");
 
     // Step 1: Ensure email is not in the update data, remove it if present
@@ -173,32 +174,31 @@ exports.updatePassword = async (userId, currentPassword, newPassword) => {
   }
 };
 exports.updateRoleAndVerify = async (id, role, updates) => {
-    const user = await User.findById(id);
-    if (!user) throw new Error('User not found');
-    
-    // Chỉ cập nhật verify khi role là 'user'
-    if (user.role === 'user') {
-        // Kiểm tra nếu role có verify, nếu không thì tạo mới
-        if (!user.verify) {
-            user.verify = {};
-        }
+  const user = await User.findById(id);
+  if (!user) throw new Error("User not found");
 
-        // Cập nhật verify
-        user.verify.status = updates.verify.status;  // Cập nhật verify status
-        user.verify.requestId = updates.verify.requestId;  // Cập nhật verify requestId
-        
-        console.log('User role before update:', user.role);
-        console.log('Updates:', updates);
-
-        await user.save(); // Lưu người dùng với verify đã cập nhật
-
-        // Nếu muốn thay đổi từ 'user' sang 'seller'
-        if (role !== 'seller') {
-            user.role = 'seller'; // Thay đổi role thành 'seller'
-            await user.save(); // Lưu lại người dùng sau khi thay đổi role
-        }
-    } else {
-        throw new Error('Role must be user to update verify');
+  // Chỉ cập nhật verify khi role là 'user'
+  if (user.role === "user") {
+    // Kiểm tra nếu role có verify, nếu không thì tạo mới
+    if (!user.verify) {
+      user.verify = {};
     }
-};
 
+    // Cập nhật verify
+    user.verify.status = updates.verify.status; // Cập nhật verify status
+    user.verify.requestId = updates.verify.requestId; // Cập nhật verify requestId
+
+    console.log("User role before update:", user.role);
+    console.log("Updates:", updates);
+
+    await user.save(); // Lưu người dùng với verify đã cập nhật
+
+    // Nếu muốn thay đổi từ 'user' sang 'seller'
+    if (role !== "seller") {
+      user.role = "seller"; // Thay đổi role thành 'seller'
+      await user.save(); // Lưu lại người dùng sau khi thay đổi role
+    }
+  } else {
+    throw new Error("Role must be user to update verify");
+  }
+};

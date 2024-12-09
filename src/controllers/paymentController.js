@@ -12,7 +12,9 @@ exports.createCheckoutSession = async (req, res) => {
 
     const cart = await cartService.getCart(userId);
     if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ error: "Cart is empty. Cannot place an order." });
+      return res
+        .status(400)
+        .json({ error: "Cart is empty. Cannot place an order." });
     }
 
     const totalPrice = cart.items.reduce((sum, item) => {
@@ -28,7 +30,10 @@ exports.createCheckoutSession = async (req, res) => {
     // Check if a coupon is applied from the cart
     if (cart.appliedCoupon) {
       couponCode = cart.appliedCoupon; // Get the coupon code from the cart
-      const coupon = await Coupon.findOne({ code: couponCode, validity: { $gte: new Date() } });
+      const coupon = await Coupon.findOne({
+        code: couponCode,
+        validity: { $gte: new Date() },
+      });
 
       if (coupon) {
         if (totalPrice >= coupon.minCartPrice) {
@@ -39,35 +44,27 @@ exports.createCheckoutSession = async (req, res) => {
           });
         }
       } else {
-        return res.status(400).json({ error: "Invalid or expired coupon code." });
+        return res
+          .status(400)
+          .json({ error: "Invalid or expired coupon code." });
       }
     }
 
     const finalPrice = totalPrice - discount;
 
-    // Create the order
-    const order = new Order({
-      userId: userId,
-      status: "Pending", // Set initial status to Pending
-      paymentStatus: "Unpaid", // Initially unpaid
-      totalQuantity: cart.items.reduce((sum, item) => sum + item.count, 0),
-      totalPrice: finalPrice,
-      deliveryAddress: deliveryAddress,
-      couponCode: couponCode || null, // Set couponCode
-      discountAmount: discount, // Include discountAmount
-      orderItems: cart.items.map((item) => ({
-        productId: item.product._id,
-        variantId: item.variantId,
-        quantity: item.count,
-        price: item.variantDetails ? parseFloat(item.variantDetails.price || 0) : parseFloat(item.product.price || 0),
-      })),
-    });
+    // Create a Stripe Checkout session
+    const sessionUrl = await paymentService.createCheckoutSession(
+      userId,
+      null, // Pass null as `orderId` because the order is not created yet
+      {
+        totalPrice: finalPrice,
+        deliveryAddress,
+        couponCode,
+        discount,
+      }
+    );
 
-    await order.save();
-
-    const sessionUrl = await paymentService.createCheckoutSession(userId, order._id);
-
-    res.status(200).json({ url: sessionUrl, orderId: order._id });
+    res.status(200).json({ url: sessionUrl });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -79,18 +76,49 @@ exports.paymentSuccess = async (req, res) => {
     const { session_id } = req.query;
     const session = await stripe.checkout.sessions.retrieve(session_id);
 
-    // Get the orderId from the session metadata
-    const orderId = session.metadata.orderId;
+    const userId = session.metadata.userId;
+    const cart = await cartService.getCart(userId);
 
-    await Order.findByIdAndUpdate(orderId, {
-      paymentStatus: "Paid",
-      status: "Delivered", // Change status to Delivered
+    if (!cart || cart.items.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "Cart is empty. Cannot create an order." });
+    }
+
+    // Fetch metadata from the payment session
+    const totalPrice = parseFloat(session.amount_total / 100); // Stripe total is in smallest currency unit
+    const deliveryAddress = session.metadata.deliveryAddress;
+    const couponCode = session.metadata.couponCode;
+    const discount = parseFloat(session.metadata.discount || 0);
+
+    // Create the order
+    const order = new Order({
+      userId: userId,
+      status: "Pending", // Initial status
+      paymentStatus: "Paid", // Mark as paid since payment was successful
+      totalQuantity: cart.items.reduce((sum, item) => sum + item.count, 0),
+      totalPrice: totalPrice,
+      deliveryAddress: deliveryAddress,
+      couponCode: couponCode || null,
+      discountAmount: discount,
+      orderItems: cart.items.map((item) => ({
+        productId: item.product._id,
+        variantId: item.variantId,
+        quantity: item.count,
+        price: item.variantDetails
+          ? parseFloat(item.variantDetails.price || 0)
+          : parseFloat(item.product.price || 0),
+      })),
     });
 
-    // Clear the cart for the user
-    await cartService.clearCart(req.user.id);
+    await order.save();
 
-    res.status(200).json({ message: "Payment successful. Order delivered." });
+    // Clear the cart after a successful order
+    await cartService.clearCart(userId);
+
+    res
+      .status(200)
+      .json({ message: "Payment successful and order created.", order });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -109,14 +137,19 @@ exports.payForOrder = async (req, res) => {
     }
 
     if (order.userId.toString() !== userId) {
-      return res.status(403).json({ error: "You are not authorized to pay for this order." });
+      return res
+        .status(403)
+        .json({ error: "You are not authorized to pay for this order." });
     }
 
     if (order.paymentStatus === "Paid") {
       return res.status(400).json({ error: "Order is already paid." });
     }
 
-    const sessionUrl = await paymentService.createCheckoutSession(userId, orderId);
+    const sessionUrl = await paymentService.createCheckoutSession(
+      userId,
+      orderId
+    );
 
     res.status(200).json({ url: sessionUrl });
   } catch (err) {

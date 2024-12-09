@@ -25,11 +25,6 @@ exports.createRequest = async ({ type, targetId, title, reason, createdBy }) => 
     const request = await Request.findById(id);
     if (!request) throw new Error('Request not found');
   
-    // Không cho phép cập nhật nếu request đã "done"
-    if (request.status === 'done') {
-      throw new Error('Request is already completed');
-    }
-  
     // Kiểm tra nếu `result` khác "pending", cần có `feedback`
     if (updates.result && updates.result !== 'pending' && !updates.feedback) {
       throw new Error('Feedback is required for approved or rejected requests');

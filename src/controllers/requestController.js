@@ -105,11 +105,6 @@ exports.createRequest = async (req, res) => {
         const request = await RequestService.getRequestById(id);
         if (!request) return res.status(404).json({ error: 'Request not found' });
 
-        // Không thể cập nhật nếu request đã "done"
-        if (request.status === 'done') {
-            return res.status(400).json({ error: 'Request is already completed' });
-        }
-
         // Kiểm tra nếu `result` khác "pending", cần có `feedback`
         if (result && result !== 'pending' && !feedback) {
             return res.status(400).json({ error: 'Feedback is required for approved or rejected requests' });
