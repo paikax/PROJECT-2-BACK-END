@@ -195,18 +195,16 @@ exports.applyCouponToCart = async (userId, couponCode) => {
   }
 
   // Apply the discount
-  const discount = coupon.discount;
-  const discountedPrice = totalPrice - discount;
-
+  const discountAmount = (totalPrice * coupon.discount) / 100; // Calculate discount as a percentage
+  const discountedPrice = totalPrice - discountAmount; // Adjust total price
   // Update the cart with the applied coupon and new total price
   cart.appliedCoupon = couponCode;
   cart.discountedTotal = discountedPrice; // Save the discounted total price
   await cart.save();
-
   return {
     cart,
     totalPrice,
     discountedPrice,
-    discount,
+    discountAmount, // Return the discount amount
   };
 };

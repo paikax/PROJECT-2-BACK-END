@@ -16,7 +16,7 @@ exports.createCheckoutSession = async (
 
   const lineItems = cart.items.map((item) => {
     const unitAmount = Math.round(
-      parseFloat(item.variantDetails?.price || item.product.price) * 100
+      parseFloat(item.variantDetails?.price || item.product.price) 
     ); // Convert to smallest currency unit
 
     return {
