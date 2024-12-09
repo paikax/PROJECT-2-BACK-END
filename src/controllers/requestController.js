@@ -98,56 +98,60 @@ exports.createRequest = async (req, res) => {
 
   exports.updateRequest = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { result, feedback } = req.body;
-
-        // Kiểm tra request tồn tại
-        const request = await RequestService.getRequestById(id);
-        if (!request) return res.status(404).json({ error: 'Request not found' });
-
-        // Kiểm tra nếu `result` khác "pending", cần có `feedback`
-        if (result && result !== 'pending' && !feedback) {
-            return res.status(400).json({ error: 'Feedback is required for approved or rejected requests' });
-        }
-
-        // Kiểm tra `targetId` tồn tại trong collection tương ứng
-        let targetExists;
-        switch (request.type) {
-            case 'product':
-                targetExists = await Product.findById(request.targetId);
-                break;
-            case 'user':
-                targetExists = await User.findById(request.targetId);
-                break;
-            default:
-                return res.status(400).json({ error: 'Unsupported request type' });
-        }
-
-        if (!targetExists) {
-            return res.status(404).json({ error: `${request.type} not found with the given ID` });
-        }
-
-        // Cập nhật `target` dựa trên trạng thái
-        const updates = { verify: { status: result, requestId: id } };
-        switch (request.type) {
-            case 'product':
-                await ProductService.updateVerifyStatus(request.targetId, updates);
-                break;
-            case 'user':
-                await UserService.updateRoleAndVerify(request.targetId, result, updates);
-                break;
-        }
-
-        // Cập nhật request
-        request.result = result || request.result;
-        request.feedback = feedback || request.feedback;
-        request.updatedBy = req.user.id;
-        request.status = 'done'; // Tự động chuyển trạng thái thành "done"
-        const updatedRequest = await request.save();
-
-        res.status(200).json(updatedRequest);
+      const { id } = req.params;
+      const { result, feedback } = req.body;
+  
+      // Check if the request exists
+      const request = await RequestService.getRequestById(id);
+      if (!request) return res.status(404).json({ error: 'Request not found' });
+  
+      // Check if feedback is required
+      if (result && result !== 'pending' && !feedback) {
+        return res.status(400).json({ error: 'Feedback is required for approved or rejected requests' });
+      }
+  
+      // Verify if the target ID exists in the corresponding collection
+      let targetExists;
+      switch (request.type) {
+        case 'product':
+          targetExists = await Product.findById(request.targetId);
+          break;
+        case 'user':
+          targetExists = await User.findById(request.targetId);
+          break;
+        default:
+          return res.status(400).json({ error: 'Unsupported request type' });
+      }
+  
+      if (!targetExists) {
+        return res.status(404).json({ error: `${request.type} not found with the given ID` });
+      }
+  
+      // Update the product or user based on the request type
+      const updates = { verify: { status: result, requestId: id, feedback: feedback } }; // Include feedback
+      switch (request.type) {
+        case 'product':
+          await ProductService.updateVerifyStatus(request.targetId, updates);
+          // Also update the product's feedback
+          const product = await Product.findById(request.targetId);
+          product.verify.feedback = feedback; // Store feedback in product
+          await product.save();
+          break;
+        case 'user':
+          await UserService.updateRoleAndVerify(request.targetId, result, updates);
+          break;
+      }
+  
+      // Update the request
+      request.result = result || request.result;
+      request.feedback = feedback || request.feedback;
+      request.updatedBy = req.user.id;
+      request.status = 'done'; // Automatically mark as done
+      const updatedRequest = await request.save();
+  
+      res.status(200).json(updatedRequest);
     } catch (err) {
-        console.error(err);
-        res.status(400).json({ error: err.message });
+      console.error(err);
+      res.status(400).json({ error: err.message });
     }
-};
+  };
