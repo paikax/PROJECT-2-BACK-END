@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const emailService = require("./emailService");
 const jwt = require("jsonwebtoken");
+const agenda = require("../../config/agenda");
 
 exports.registerUser = async (
   fullName,
@@ -71,6 +72,12 @@ exports.registerUser = async (
 
   await user.save();
   await emailService.sendConfirmationEmail(email, confirmationToken);
+
+  // // Schedule deletion of unconfirmed users
+  // await agenda.schedule("in 2 minutes", "delete unconfirmed user", {
+  //   email,
+  //   confirmationToken,
+  // });
 
   return user;
 };

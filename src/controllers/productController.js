@@ -35,9 +35,8 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-// Get all products
-
-exports.getAllProducts = async (req, res) => {
+// Get 8 product per scrolling or page
+exports.loadProductsByScroll = async (req, res) => {
   try {
     let userRole = "guest"; // Mặc định là guest
     // Kiểm tra token trong header Authorization
@@ -159,7 +158,7 @@ exports.getAllProducts = async (req, res) => {
     }
 
     // Fetch and send products
-    const products = await productService.getAllProducts(
+    const products = await productService.loadProductsByScroll(
       query,
       parseInt(skip),
       parseInt(limit)
@@ -169,6 +168,137 @@ exports.getAllProducts = async (req, res) => {
     const totalProducts = await Product.countDocuments(query);
 
     res.status(200).json({ success: true, data: products, totalProducts });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// Get all product
+
+exports.getAllProducts = async (req, res) => {
+  try {
+    let userRole = "guest"; // Mặc định là guest
+    // Kiểm tra token trong header Authorization
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      try {
+        // Giải mã token để lấy role
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); // Đảm bảo `JWT_SECRET` đúng
+        userRole = decoded.role || "guest";
+      } catch (err) {
+        console.warn("Token verification failed:", err.message);
+      }
+    }
+    // Base query (dành cho từng loại người dùng)
+    let query = {};
+    if (["admin", "seller"].includes(userRole)) {
+      query["verify.status"] = { $in: ["approved", "pending", "rejected"] };
+    } else if (["guest", "user"].includes(userRole)) {
+      query["verify.status"] = "approved";
+    }
+    // Extract filters from query string
+    const {
+      category,
+      brand,
+      keyword,
+      price,
+      rating,
+      variant,
+      views,
+      createdAt,
+      sellerProductFilter,
+      status,
+    } = req.query;
+
+    // Apply filters (no change here)
+    if (category) {
+      const categories = category.split(",");
+      query.$or = query.$or || [];
+      const categoryIds = categories.filter((id) =>
+        mongoose.isValidObjectId(id)
+      );
+      const categoryNames = categories.filter(
+        (name) => !mongoose.isValidObjectId(name)
+      );
+      if (categoryIds.length)
+        query.$or.push({ categoryId: { $in: categoryIds } });
+      if (categoryNames.length) {
+        const categoryDocs = await Category.find({
+          name: { $in: categoryNames },
+        });
+        query.$or.push({
+          categoryId: { $in: categoryDocs.map((cat) => cat._id) },
+        });
+      }
+    }
+
+    if (brand) {
+      const brands = brand.split(",");
+      query.$or = query.$or || [];
+      const brandIds = brands.filter((id) => mongoose.isValidObjectId(id));
+      const brandNames = brands.filter(
+        (name) => !mongoose.isValidObjectId(name)
+      );
+      if (brandIds.length) query.$or.push({ brandId: { $in: brandIds } });
+      if (brandNames.length) {
+        const brandDocs = await Brand.find({ name: { $in: brandNames } });
+        query.$or.push({ brandId: { $in: brandDocs.map((br) => br._id) } });
+      }
+    }
+
+    if (keyword) {
+      query.$or = query.$or || [];
+      query.$or.push(
+        { name: { $regex: keyword, $options: "i" } },
+        { description: { $regex: keyword, $options: "i" } },
+        { "sellerId.fullName": { $regex: keyword, $options: "i" } }
+      );
+    }
+
+    if (price) {
+      const [minPrice, maxPrice] = price.split(",");
+      query.price = { $gte: parseFloat(minPrice), $lte: parseFloat(maxPrice) };
+    }
+
+    if (rating) {
+      const [minRating, maxRating] = rating.split(",");
+      query.rating = {
+        $gte: parseFloat(minRating),
+        $lte: parseFloat(maxRating),
+      };
+    }
+
+    if (variant) {
+      query["variants.attributes"] = { $regex: variant, $options: "i" };
+    }
+
+    if (views) {
+      const [minViews, maxViews] = views.split(",");
+      query.views = {
+        $gte: parseInt(minViews, 10),
+        $lte: parseInt(maxViews, 10),
+      };
+    }
+
+    if (createdAt) {
+      const [startDate, endDate] = createdAt.split(",");
+      query.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
+
+    if (sellerProductFilter === "true" && req.query.sellerId) {
+      query.sellerId = req.query.sellerId;
+    }
+    if (status) {
+      query["verify.status"] = status;
+    }
+
+    // Fetch and send products
+    const products = await productService.getAllProducts(query);
+    res.status(200).json({ success: true, data: products });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

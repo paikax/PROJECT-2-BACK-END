@@ -87,6 +87,10 @@ const productSchema = new mongoose.Schema({
       ref: "Request",
       default: null,
     },
+    feedback: { // Add this line
+      type: String,
+      default: null,
+    },
   },
   views: {
     type: Number,

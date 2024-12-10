@@ -50,7 +50,7 @@ exports.createCheckoutSession = async (req, res) => {
       }
     }
 
-    const finalPrice = totalPrice - discount;
+    const finalPrice = (totalPrice * discount) / 100; // Calculate discount as a percentage;
 
     // Create a Stripe Checkout session
     const sessionUrl = await paymentService.createCheckoutSession(

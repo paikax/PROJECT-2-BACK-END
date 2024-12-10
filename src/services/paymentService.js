@@ -6,9 +6,36 @@ const cartService = require("./cartService");
 exports.createCheckoutSession = async (
   userId,
   orderId,
-  { totalPrice, deliveryAddress, couponCode, discount }
+  { totalPrice, deliveryAddress, appliedCoupon, discount }
 ) => {
   const cart = await cartService.getCart(userId);
+  if (!cart) {
+    throw new Error("cart not found");
+  }
+
+  // Variables for coupon application
+  let stripeCouponId = null;
+
+  // Check if a coupon code is applied
+  if (cart.appliedCoupon) {
+    const coupon = await Coupon.findOne({
+      code: cart.appliedCoupon,
+      validity: { $gte: new Date() }, // Ensure the coupon is still valid
+    });
+
+    if (coupon) {
+      // Create a Stripe coupon dynamically
+      const stripeCoupon = await stripe.coupons.create({
+        name: `Discount (${coupon.code})`,
+        percent_off: coupon.discount, // Stripe accepts percentage discounts
+        duration: "once", // The discount should only apply once
+      });
+
+      stripeCouponId = stripeCoupon.id; // Store the coupon ID for the session
+    } else {
+      throw new Error("Invalid or expired coupon code in the order.");
+    }
+  }
 
   if (!cart || cart.items.length === 0) {
     throw new Error("Cart is empty. Cannot create a checkout session.");
@@ -16,7 +43,7 @@ exports.createCheckoutSession = async (
 
   const lineItems = cart.items.map((item) => {
     const unitAmount = Math.round(
-      parseFloat(item.variantDetails?.price || item.product.price) * 100
+      parseFloat(item.variantDetails?.price || item.product.price) 
     ); // Convert to smallest currency unit
 
     return {
@@ -36,13 +63,13 @@ exports.createCheckoutSession = async (
     payment_method_types: ["card"],
     mode: "payment",
     line_items: lineItems,
-    discounts: discount ? [{ coupon: discount }] : [], // Apply discount if available
+    discounts: stripeCouponId ? [{ coupon: stripeCouponId }] : [], // Use couponCode directly here
     success_url: `${process.env.CLIENT_URL}/payment/stripe-success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${process.env.CLIENT_URL}/payment/stripe-failed`,
     metadata: {
       userId,
       deliveryAddress,
-      couponCode: couponCode || "None",
+      appliedCoupon: appliedCoupon || "None",
       discount,
       totalPrice,
     },

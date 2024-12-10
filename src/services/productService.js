@@ -70,11 +70,22 @@ exports.createProduct = async ({
   return product;
 };
 
-exports.getAllProducts = async (query, skip, limit) => {
+exports.loadProductsByScroll = async (query, skip, limit) => {
   try {
     return await Product.find(query)
       .skip(skip) // Skip already loaded products
       .limit(limit) // Limit to the number of products requested
+      .populate("sellerId", "fullName")
+      .populate("categoryId", "name")
+      .populate("brandId", "name");
+  } catch (err) {
+    throw new Error("Failed to retrieve products");
+  }
+};
+
+exports.getAllProducts = async (query) => {
+  try {
+    return await Product.find(query)
       .populate("sellerId", "fullName")
       .populate("categoryId", "name")
       .populate("brandId", "name");

@@ -126,7 +126,7 @@ router.post(
  *       400:
  *         description: Bad request
  */
-router.get("/products", productController.getAllProducts);
+router.get("/productsbychunks", productController.getAllProducts);
 
 // Retrieve a Product by ID
 /**
@@ -644,5 +644,9 @@ router.get(
   "/products/variant/:variantId",
   productController.fetchVariantDetails
 );
+
+
+router.get("/products", productController.getAllProducts);
+
 
 module.exports = router;
