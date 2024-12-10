@@ -3,6 +3,7 @@ const ProductService = require('../services/productService');
 const UserService = require('../services/userService');
 const Product = require('../models/Product');  // Sửa đường dẫn phù hợp với dự án của bạn
 const User = require('../models/User');
+const mongoose = require('mongoose'); // Import mongoose for ObjectId
 
 exports.createRequest = async (req, res) => {
   try {
@@ -158,10 +159,17 @@ exports.createRequest = async (req, res) => {
 
   exports.getRequestsByUser = async (req, res) => {
     try {
-      const userId = req.user.id; // Get the logged-in user's ID from the token
+      const userId = req.user.id;
+  
+      // Validate and convert userId to ObjectId if needed
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(400).json({ error: 'Invalid user ID format' });
+      }
+  
+      const objectId = new mongoose.Types.ObjectId(userId);
   
       // Fetch all requests created by this user
-      const requests = await RequestService.getAllRequests({ createdBy: userId });
+      const requests = await RequestService.getAllRequests({ createdBy: objectId });
   
       res.status(200).json(requests);
     } catch (err) {
