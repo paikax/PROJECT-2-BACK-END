@@ -7,43 +7,70 @@ const mongoose = require('mongoose'); // Import mongoose for ObjectId
 
 exports.createRequest = async (req, res) => {
   try {
-      const { type, targetId, title, reason } = req.body;
+    const { type, targetId, title, reason } = req.body;
 
-      // Check if `type` is valid
-      if (!['product', 'user'].includes(type)) {
-          return res.status(400).json({ error: 'Invalid request type' });
-      }
+    // Check if `type` is valid
+    if (!['product', 'user'].includes(type)) {
+      return res.status(400).json({ error: 'Invalid request type' });
+    }
 
-      // Restrict users with role `user` from creating product requests
-      if (type === 'product' && req.user.role === 'user') {
-          return res.status(403).json({ error: 'You are not authorized to request a product' });
-      }
+    // Restrict users with role `user` from creating product requests
+    if (type === 'product' && req.user.role === 'user') {
+      return res.status(403).json({ error: 'You are not authorized to request a product' });
+    }
 
-      // Verify `targetId` exists in the corresponding collection
-      let targetExists;
-      switch (type) {
-          case 'product':
-              targetExists = await Product.findById(targetId);
-              break;
-          case 'user':
-              targetExists = await User.findById(targetId);
-              break;
-      }
-      if (!targetExists) {
-          return res.status(404).json({ error: `${type} not found with the given ID` });
-      }
+    // Check if the user already has a pending request for role upgrade (type: 'user')
+    if (type === 'user') {
+      const existingRequest = await RequestService.getAllRequests({
+        type: 'user',
+        createdBy: req.user.id,
+        status: { $ne: 'done' }, // Only check for `unread` or `pending` requests
+      });
 
-      // Create a new request
-      const request = await RequestService.createRequest({
-          type,
-          targetId,
+      if (existingRequest.length > 0) {
+        // Update the existing request instead of creating a new one
+        const existingRequestId = existingRequest[0]._id;
+
+        const updatedRequest = await RequestService.updateRequest(existingRequestId, {
           title,
           reason,
-          createdBy: req.user.id,
-      });
-      res.status(201).json(request);
+          updatedBy: req.user.id,
+          updatedAt: new Date(),
+        });
+
+        return res.status(200).json({
+          message: 'Existing request has been updated',
+          request: updatedRequest,
+        });
+      }
+    }
+
+    // Verify `targetId` exists in the corresponding collection
+    let targetExists;
+    switch (type) {
+      case 'product':
+        targetExists = await Product.findById(targetId);
+        break;
+      case 'user':
+        targetExists = await User.findById(targetId);
+        break;
+    }
+    if (!targetExists) {
+      return res.status(404).json({ error: `${type} not found with the given ID` });
+    }
+
+    // Create a new request
+    const request = await RequestService.createRequest({
+      type,
+      targetId,
+      title,
+      reason,
+      createdBy: req.user.id,
+    });
+
+    res.status(201).json(request);
   } catch (err) {
-      res.status(400).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 };
 
@@ -176,3 +203,99 @@ exports.createRequest = async (req, res) => {
       res.status(400).json({ error: err.message });
     }
   };
+
+// API to approve a request
+exports.approveRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find the request by ID
+    const request = await RequestService.getRequestById(id);
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    // Verify the request type is 'product'
+    if (request.type !== 'product') {
+      return res.status(400).json({ error: 'Only product requests can be approved via this API' });
+    }
+
+    // Verify if the target product exists
+    const product = await Product.findById(request.targetId);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found for the given request' });
+    }
+
+    // Update product's verify status to approved with feedback
+    product.verify.status = 'approved';
+    product.verify.requestId = request._id;
+    product.verify.feedback = 'Product approved successfully';
+    await product.save();
+
+    // Update the request status and result
+    request.status = 'done';
+    request.result = 'approved';
+    request.feedback = 'Product approved successfully';
+    request.updatedBy = req.user.id;
+    await request.save();
+
+    res.status(200).json({
+      message: 'Request approved successfully',
+      request,
+      product,
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+// API to reject a request
+exports.rejectRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { feedback } = req.body;
+
+    // Ensure feedback is provided
+    if (!feedback) {
+      return res.status(400).json({ error: 'Feedback is required to reject a request' });
+    }
+
+    // Find the request by ID
+    const request = await RequestService.getRequestById(id);
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    // Verify the request type is 'product'
+    if (request.type !== 'product') {
+      return res.status(400).json({ error: 'Only product requests can be rejected via this API' });
+    }
+
+    // Verify if the target product exists
+    const product = await Product.findById(request.targetId);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found for the given request' });
+    }
+
+    // Update product's verify status to rejected with feedback
+    product.verify.status = 'rejected';
+    product.verify.requestId = request._id;
+    product.verify.feedback = feedback;
+    await product.save();
+
+    // Update the request status and result
+    request.status = 'done';
+    request.result = 'rejected';
+    request.feedback = feedback;
+    request.updatedBy = req.user.id;
+    await request.save();
+
+    res.status(200).json({
+      message: 'Request rejected successfully',
+      request,
+      product,
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};

@@ -20,4 +20,10 @@ router.get('/requests/:id', verifyToken, requestController.getRequestById); // M
 // Cập nhật request (admin xử lý)
 router.put('/requests/:id', verifyToken, authorizeRole('admin'), requestController.updateRequest);
 
+// Approve a request (admin only)
+router.put('/requests/:id/approve', verifyToken, authorizeRole('admin'), requestController.approveRequest);
+
+// Reject a request (admin only)
+router.put('/requests/:id/reject', verifyToken, authorizeRole('admin'), requestController.rejectRequest);
+
 module.exports = router;
