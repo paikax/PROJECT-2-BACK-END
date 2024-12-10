@@ -6,7 +6,7 @@ const cartService = require("./cartService");
 exports.createCheckoutSession = async (
   userId,
   orderId,
-  { totalPrice, deliveryAddress, appliedCoupon, discount }
+  { totalPrice, deliveryAddress, appliedCoupon, discount, paymentMethod }
 ) => {
   const cart = await cartService.getCart(userId);
   if (!cart) {
@@ -72,6 +72,7 @@ exports.createCheckoutSession = async (
       appliedCoupon: appliedCoupon || "None",
       discount,
       totalPrice,
+      paymentMethod,
     },
   });
 
