@@ -3,7 +3,7 @@ const cartService = require("../services/cartService"); // Import cartService fo
 
 const formatDate = (date) => {
   const d = new Date(date);
-  return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`; // Format as dd-mm-yyyy
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`; // Format as dd/mm/yyyy
 };
 
 // Create a coupon
