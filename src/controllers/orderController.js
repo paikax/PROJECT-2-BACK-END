@@ -247,3 +247,24 @@ exports.getSellerOrders = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// Get an order by ID
+exports.getOrderById = async (req, res) => {
+  try {
+    const { orderId } = req.params; // Extract order ID from route parameters
+
+    // Find the order by its ID
+    const order = await Order.findById(orderId)
+      .populate("orderItems.productId", "name price imageUrls") // Populate product details
+      .populate("userId", "name email"); // Populate user details
+
+    // Check if the order exists
+    if (!order) {
+      return res.status(404).json({ error: "Order not found." });
+    }
+
+    res.status(200).json(order); // Return the order details
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

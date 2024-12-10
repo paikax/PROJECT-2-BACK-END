@@ -25,4 +25,7 @@ router.get("/orders/user", verifyToken, orderController.getUserOrders);
 // Get all orders for the authenticated seller's products
 router.get("/orders/seller", verifyToken, orderController.getSellerOrders);
 
+// Get a specific order by ID
+router.get("/orders/:orderId", verifyToken, orderController.getOrderById);
+
 module.exports = router;
