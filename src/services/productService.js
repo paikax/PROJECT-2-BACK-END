@@ -70,17 +70,26 @@ exports.createProduct = async ({
   return product;
 };
 
-exports.loadProductsByScroll = async (query, skip, limit) => {
-  try {
-    return await Product.find(query)
-      .skip(skip) // Skip already loaded products
-      .limit(limit) // Limit to the number of products requested
-      .populate("sellerId", "fullName")
-      .populate("categoryId", "name")
-      .populate("brandId", "name");
-  } catch (err) {
-    throw new Error("Failed to retrieve products");
+exports.loadProductsByScroll = async (filters, skip, limit) => {
+  const query = {};
+
+  // Apply category filters
+  if (filters.categories && filters.categories.length) {
+    query.categoryId = { $in: filters.categories };
   }
+
+  // Apply brand filters
+  if (filters.brands && filters.brands.length) {
+    query.brandId = { $in: filters.brands };
+  }
+
+  // Apply price range filter
+  if (filters.price) {
+    const [minPrice, maxPrice] = filters.price;
+    query.price = { $gte: minPrice, $lte: maxPrice };
+  }
+
+  return await Product.find(query).skip(skip).limit(limit);
 };
 
 exports.getAllProducts = async (query) => {
