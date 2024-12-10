@@ -3,6 +3,9 @@ const cartService = require("../services/cartService"); // Import cartService fo
 
 const formatDate = (date) => {
   const d = new Date(date);
+  if (isNaN(d.getTime())) {
+    return "Invalid Date"; // Handle invalid date case
+  }
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`; // Format as dd/mm/yyyy
 };
 
@@ -10,6 +13,12 @@ const formatDate = (date) => {
 exports.createCoupon = async (req, res) => {
   try {
     const { code, discount, minCartPrice, validity, description } = req.body;
+
+    // Validate the validity date
+    if (!validity || isNaN(new Date(validity).getTime())) {
+      return res.status(400).json({ error: "Invalid validity date." });
+    }
+
     const formattedValidity = formatDate(validity); // Format the date
     const coupon = new Coupon({
       code,
@@ -30,7 +39,13 @@ exports.createCoupon = async (req, res) => {
 exports.updateCoupon = async (req, res) => {
   try {
     const { code, discount, minCartPrice, validity, description } = req.body;
-    const formattedValidity = formatDate(validity); // Format the date
+
+    // Validate the validity date
+    if (validity && isNaN(new Date(validity).getTime())) {
+      return res.status(400).json({ error: "Invalid validity date." });
+    }
+
+    const formattedValidity = validity ? formatDate(validity) : undefined; // Format the date if provided
     const coupon = await Coupon.findByIdAndUpdate(
       req.params.id,
       { code, discount, minCartPrice, validity: formattedValidity, description },
