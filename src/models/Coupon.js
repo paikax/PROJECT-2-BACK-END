@@ -22,7 +22,7 @@ const couponSchema = new mongoose.Schema({
     required: true, // Ensure the coupon is associated with an admin
   },
   validity: {
-    type: String, // Changed to String to store formatted date
+    type: Date,
     required: true, // Expiry date of the coupon
   },
   description: {
