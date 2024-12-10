@@ -69,8 +69,25 @@ exports.createProduct = async ({
 
   return product;
 };
-
 exports.loadProductsByScroll = async (filters, skip, limit) => {
+  const query = buildQuery(filters);
+
+  // Retrieve paginated products
+  return await Product.find(query)
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 }); // Sort by newest products
+};
+
+exports.countFilteredProducts = async (filters) => {
+  const query = buildQuery(filters);
+
+  // Count documents matching the query
+  return await Product.countDocuments(query);
+};
+
+// Utility function to build query
+function buildQuery(filters) {
   const query = {};
 
   // Apply category filters
@@ -89,8 +106,8 @@ exports.loadProductsByScroll = async (filters, skip, limit) => {
     query.price = { $gte: minPrice, $lte: maxPrice };
   }
 
-  return await Product.find(query).skip(skip).limit(limit);
-};
+  return query;
+}
 
 exports.getAllProducts = async (query) => {
   try {

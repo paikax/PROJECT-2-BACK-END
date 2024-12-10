@@ -40,24 +40,29 @@ exports.loadProductsByScroll = async (req, res) => {
   try {
     const { category, brand, price, skip = 0, limit = 8 } = req.query;
 
+    // Prepare filters object
     const filters = {
       categories: category ? category.split(",") : [],
       brands: brand ? brand.split(",") : [],
       price: price ? price.split(",").map(Number) : null,
     };
 
-    const products = await productService.loadProductsByScroll(
-      filters,
-      parseInt(skip),
-      parseInt(limit)
-    );
-    const totalProducts = await Product.countDocuments(filters);
+    // Fetch products and count simultaneously
+    const [products, totalProducts] = await Promise.all([
+      productService.loadProductsByScroll(
+        filters,
+        parseInt(skip),
+        parseInt(limit)
+      ),
+      productService.countFilteredProducts(filters),
+    ]);
 
     res.status(200).json({ success: true, data: products, totalProducts });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 };
+
 // Get all product
 
 exports.getAllProducts = async (req, res) => {
