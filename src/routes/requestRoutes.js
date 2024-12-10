@@ -191,4 +191,38 @@ router.get('/requests/:id', verifyToken, requestController.getRequestById);
  */
 router.put('/requests/:id', verifyToken, authorizeRole('admin'), requestController.updateRequest);
 
+/**
+ * @swagger
+ * /requests/user:
+ *   get:
+ *     summary: Get all requests created by the logged-in user
+ *     tags: [Requests]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Requests retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   type:
+ *                     type: string
+ *                   title:
+ *                     type: string
+ *                   status:
+ *                     type: string
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *       400:
+ *         description: Bad request
+ */
+router.get('/requests/user', verifyToken, requestController.getRequestsByUser);
+
 module.exports = router;

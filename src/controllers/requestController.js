@@ -155,3 +155,16 @@ exports.createRequest = async (req, res) => {
       res.status(400).json({ error: err.message });
     }
   };
+
+  exports.getRequestsByUser = async (req, res) => {
+    try {
+      const userId = req.user.id; // Get the logged-in user's ID from the token
+  
+      // Fetch all requests created by this user
+      const requests = await RequestService.getAllRequests({ createdBy: userId });
+  
+      res.status(200).json(requests);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  };
