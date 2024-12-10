@@ -27,6 +27,7 @@ const orderSchema = new mongoose.Schema({
   totalPrice: { type: Number, required: true },
   deliveryAddress: { type: String, required: true },
   orderDate: { type: Date, default: Date.now },
+  paymentMethod: { type: String, required: true }, // Add this line
   orderItems: [orderItemSchema],
   reason: { type: String },
   refundAmount: { type: Number, default: 0 },

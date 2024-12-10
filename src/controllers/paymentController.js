@@ -7,8 +7,12 @@ const Coupon = require("../models/Coupon");
 // Create a checkout session for Pay Now
 exports.createCheckoutSession = async (req, res) => {
   try {
-    const { deliveryAddress } = req.body;
+    const { deliveryAddress, paymentMethod } = req.body; // Include paymentMethod
     const userId = req.user.id;
+
+    if (!paymentMethod) {
+      return res.status(400).json({ error: "Payment method is required." });
+    }
 
     const cart = await cartService.getCart(userId);
     if (!cart || cart.items.length === 0) {
@@ -61,6 +65,7 @@ exports.createCheckoutSession = async (req, res) => {
         deliveryAddress,
         couponCode,
         discount,
+        paymentMethod,
       }
     );
 
@@ -90,7 +95,7 @@ exports.paymentSuccess = async (req, res) => {
     const deliveryAddress = session.metadata.deliveryAddress;
     const couponCode = session.metadata.couponCode;
     const discount = parseFloat(session.metadata.discount || 0);
-
+    const paymentMethod = session.metadata.paymentMethod;
     // Create the order
     const order = new Order({
       userId: userId,
@@ -101,6 +106,7 @@ exports.paymentSuccess = async (req, res) => {
       deliveryAddress: deliveryAddress,
       couponCode: couponCode || null,
       discountAmount: discount,
+      paymentMethod: paymentMethod, // Include payment method
       orderItems: cart.items.map((item) => ({
         productId: item.product._id,
         variantId: item.variantId,

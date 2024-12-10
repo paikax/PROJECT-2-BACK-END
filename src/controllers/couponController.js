@@ -1,15 +1,21 @@
 const Coupon = require("../models/Coupon");
 const cartService = require("../services/cartService"); // Import cartService for cart operations
 
+const formatDate = (date) => {
+  const d = new Date(date);
+  return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`; // Format as dd-mm-yyyy
+};
+
 // Create a coupon
 exports.createCoupon = async (req, res) => {
   try {
     const { code, discount, minCartPrice, validity, description } = req.body;
+    const formattedValidity = formatDate(validity); // Format the date
     const coupon = new Coupon({
       code,
       discount,
       minCartPrice,
-      validity,
+      validity: formattedValidity,
       description,
       adminId: req.user.id,
     });
@@ -24,9 +30,10 @@ exports.createCoupon = async (req, res) => {
 exports.updateCoupon = async (req, res) => {
   try {
     const { code, discount, minCartPrice, validity, description } = req.body;
+    const formattedValidity = formatDate(validity); // Format the date
     const coupon = await Coupon.findByIdAndUpdate(
       req.params.id,
-      { code, discount, minCartPrice, validity, description },
+      { code, discount, minCartPrice, validity: formattedValidity, description },
       { new: true, runValidators: true }
     );
     if (!coupon) {
@@ -42,7 +49,12 @@ exports.updateCoupon = async (req, res) => {
 exports.getAllCoupons = async (req, res) => {
   try {
     const coupons = await Coupon.find().populate("adminId", "fullName");
-    res.status(200).json(coupons);
+    // Format validity dates for response
+    const formattedCoupons = coupons.map(coupon => ({
+      ...coupon._doc,
+      validity: formatDate(coupon.validity), // Format the date
+    }));
+    res.status(200).json(formattedCoupons);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -55,7 +67,10 @@ exports.getCouponById = async (req, res) => {
     if (!coupon) {
       return res.status(404).json({ error: "Coupon not found" });
     }
-    res.status(200).json(coupon);
+    res.status(200).json({
+      ...coupon._doc,
+      validity: formatDate(coupon.validity), // Format the date
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -72,7 +87,7 @@ exports.deleteCoupon = async (req, res) => {
       return res.status(403).json({ error: "Unauthorized to delete this coupon" });
     }
 
-    await coupon.remove();
+    await Coupon.deleteOne({ _id: req.params.id });
     res.status(200).json({ message: "Coupon deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -104,8 +119,8 @@ exports.applyCoupon = async (req, res) => {
     }, 0);
 
     // Fetch the coupon and validate it
-    const coupon = await Coupon.findOne({ code: couponCode, validity: { $gte: new Date() } });
-    if (!coupon) {
+    const coupon = await Coupon.findOne({ code: couponCode });
+    if (!coupon || coupon.validity < formatDate(new Date())) { // Check validity
       return res.status(400).json({ error: "Invalid or expired coupon code." });
     }
 

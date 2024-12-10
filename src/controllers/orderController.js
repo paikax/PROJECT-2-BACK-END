@@ -5,7 +5,7 @@ const Product = require("../models/Product");
 
 exports.createOrderForPayLater = async (req, res) => {
   try {
-    const { deliveryAddress } = req.body;
+    const { deliveryAddress, paymentMethod } = req.body; // Include paymentMethod
     const userId = req.user.id;
 
     const cart = await cartService.getCart(userId);
@@ -55,6 +55,7 @@ exports.createOrderForPayLater = async (req, res) => {
       userId: userId,
       status: "Pending", // Set initial status to Pending
       paymentStatus: "Unpaid", // Initially unpaid
+      paymentMethod: paymentMethod,
       totalQuantity: cart.items.reduce((sum, item) => sum + item.count, 0),
       totalPrice: finalPrice,
       deliveryAddress: deliveryAddress,

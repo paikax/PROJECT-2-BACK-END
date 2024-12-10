@@ -241,10 +241,14 @@ router.post(
       req.connection.socket.remoteAddress;
 
     const userId = req.user.id;
-    const { deliveryAddress, bankCode, language } = req.body;
+    const { deliveryAddress, bankCode, language, paymentMethod } = req.body;
 
     if (!deliveryAddress) {
       return res.status(400).json({ error: "Delivery address is required." });
+    }
+
+    if (!paymentMethod) {
+      return res.status(400).json({ error: "Payment method is required." });
     }
 
     // Fetch the user's shopping cart
@@ -459,6 +463,7 @@ router.get(
         userId: userId,
         status: "Pending",
         paymentStatus: "Paid",
+        paymentMethod: cart.paymentMethod || "VNPay", // Include payment method
         totalQuantity: totalQuantity,
         totalPrice: finalPrice, // Use discounted price here
         deliveryAddress: cart.deliveryAddress || "Default Address",
@@ -479,6 +484,7 @@ router.get(
           deliveryAddress: order.deliveryAddress,
           status: order.status,
           paymentStatus: order.paymentStatus,
+          paymentMethod: order.paymentMethod,
           orderItems: order.orderItems,
           couponCode: order.couponCode, // Include coupon code in response
           discountAmount: order.discountAmount, // Include discount amount in response

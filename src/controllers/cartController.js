@@ -13,13 +13,14 @@ exports.getCart = async (req, res) => {
 // Add or update a product in the cart
 exports.addToCart = async (req, res) => {
   try {
-    const { productId, variantId, count, deliveryAddress } = req.body;
+    const { productId, variantId, count, deliveryAddress, paymentMethod } = req.body;
     const cart = await cartService.addToCart(
       req.user.id,
       productId,
       variantId,
       count,
-      deliveryAddress
+      deliveryAddress,
+      paymentMethod
     );
     res.status(200).json(cart);
   } catch (err) {
@@ -45,13 +46,14 @@ exports.removeFromCart = async (req, res) => {
 // Update the count of a product in the cart
 exports.updateCartItem = async (req, res) => {
   try {
-    const { productId, variantId, count, deliveryAddress } = req.body;
+    const { productId, variantId, count, deliveryAddress, paymentMethod } = req.body;
     const cart = await cartService.updateCartItem(
       req.user.id,
       productId,
       variantId,
       count,
-      deliveryAddress
+      deliveryAddress,
+      paymentMethod
     );
     res.status(200).json(cart);
   } catch (err) {
