@@ -235,8 +235,8 @@ exports.getSellerOrders = async (req, res) => {
     // Find orders that include any of the seller's products
     const orders = await Order.find({
       "orderItems.productId": { $in: sellerProductIds },
-    }).populate("orderItems.productId", "name price") // Populate product details
-      .populate("userId", "name email"); // Optionally populate user details
+    }).populate("orderItems.productId", "name price imageUrls") // Populate product details
+      .populate("userId", "fullName email phone"); // Optionally populate user details
 
     if (!orders || orders.length === 0) {
       return res.status(404).json({ error: "No orders found for this seller's products." });
