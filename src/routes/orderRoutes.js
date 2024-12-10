@@ -5,7 +5,7 @@ const router = express.Router();
 
 // Schedule the function to update order statuses every 2 minutes
 const updateOrderStatuses = orderController.updateOrderStatuses;
-setInterval(updateOrderStatuses, 2 * 60 * 1000);
+setInterval(updateOrderStatuses, 1 * 60 * 1000);
 
 // Route to create an order for Pay Later
 router.post("/pay-later", verifyToken, orderController.createOrderForPayLater);
@@ -21,5 +21,8 @@ router.get("/orders", verifyToken, orderController.getAllOrders);
 
 // Get all orders for the authenticated user
 router.get("/orders/user", verifyToken, orderController.getUserOrders);
+
+// Get all orders for the authenticated seller's products
+router.get("/orders/seller", verifyToken, orderController.getSellerOrders);
 
 module.exports = router;

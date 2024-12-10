@@ -292,7 +292,7 @@ router.post(
     }
 
     // Calculate final price after discount
-    const finalPrice = totalPrice - discount;
+    const finalPrice = totalPrice - (totalPrice * discount / 100);
 
     // VNPay configuration and logic
     let tmnCode = vnp_TmnCode; // Use config file
@@ -385,9 +385,12 @@ router.get(
     delete vnp_Params["vnp_SecureHashType"];
 
     vnp_Params = sortObject(vnp_Params);
+
     let secretKey = vnp_HashSecret;
 
+    let querystring = require("qs");
     let signData = querystring.stringify(vnp_Params, { encode: false });
+    let crypto = require("crypto");
     let hmac = crypto.createHmac("sha512", secretKey);
     let signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
 
@@ -408,7 +411,6 @@ router.get(
         0
       );
 
-      // Calculate total price based on variant prices
       const totalPrice = Math.round(
         cart.items.reduce((sum, item) => {
           const variantPrice = item.variantDetails
@@ -428,28 +430,41 @@ router.get(
       }));
 
       // Handle coupon if applicable
-      let couponCode = vnp_Params["couponCode"]; // Extract coupon code from query params
+      let couponCode = cart.appliedCoupon || null; // Get coupon code from cart
       let discount = 0;
 
       if (couponCode) {
-        const coupon = await couponController.getCouponByCode(couponCode); // Fetch coupon
-        if (coupon && new Date(coupon.validity) >= new Date()) {
-          discount = coupon.discount; // Apply discount if valid
+        const coupon = await Coupon.findOne({
+          code: couponCode,
+          validity: { $gte: new Date() },
+        });
+
+        if (coupon) {
+          if (totalPrice >= coupon.minCartPrice) {
+            discount = coupon.discount; // Apply the coupon discount
+          } else {
+            return res.status(400).json({
+              error: `Coupon requires a minimum cart price of ${coupon.minCartPrice}. Your cart total is ${totalPrice}.`,
+            });
+          }
+        } else {
+          return res.status(400).json({ error: "Invalid or expired coupon code." });
         }
       }
 
-      // Adjust total price based on coupon discount
-      const finalPrice = totalPrice - discount;
+      // Calculate final price after discount
+      const finalPrice = totalPrice - (totalPrice * discount / 100);
 
       const order = new Order({
         userId: userId,
         status: "Pending",
         paymentStatus: "Paid",
         totalQuantity: totalQuantity,
-        totalPrice: finalPrice,
+        totalPrice: finalPrice, // Use discounted price here
         deliveryAddress: cart.deliveryAddress || "Default Address",
         orderItems: orderItems,
-        couponCode: couponCode || null, // Save coupon code used
+        couponCode: couponCode, // Save coupon code
+        discountAmount: discount > 0 ? (totalPrice * discount / 100) : 0, // Save discount amount
       });
 
       await order.save();
@@ -465,7 +480,8 @@ router.get(
           status: order.status,
           paymentStatus: order.paymentStatus,
           orderItems: order.orderItems,
-          couponCode: order.couponCode, // Include coupon code in the response
+          couponCode: order.couponCode, // Include coupon code in response
+          discountAmount: order.discountAmount, // Include discount amount in response
         },
       });
     } else {
