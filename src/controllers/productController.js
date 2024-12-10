@@ -153,9 +153,7 @@ exports.getAllProducts = async (req, res) => {
       };
     }
 
-    if (sellerProductFilter === "true" && req.query.sellerId) {
-      query.sellerId = req.query.sellerId;
-    }
+  
     if (status) {
       query["verify.status"] = status;
     }

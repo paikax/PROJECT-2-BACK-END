@@ -57,16 +57,16 @@ exports.createReview = async (req, res) => {
 
 // Get Reviews for a Product
 exports.getProductReviews = async (req, res) => {
-  try {
-    const reviews = await Review.find({ productId: req.params.productId }).populate(
-      "userId",
-      "fullName"
-    );
-    res.status(200).json(reviews);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
+    try {
+      const reviews = await Review.find({ productId: req.params.productId })
+        .populate("userId", "fullName imageUrl"); // Populate thêm trường imageURL
+  
+      res.status(200).json(reviews);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  };
+  
 
 // Update a Review
 exports.updateReview = async (req, res) => {
