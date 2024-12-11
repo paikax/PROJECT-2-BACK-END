@@ -47,6 +47,7 @@ exports.loadProductsByScroll = async (req, res) => {
       price: price ? price.split(",").map(Number) : null,
     };
 
+    filters.verificationStatus = "approved";
     // Fetch products and count simultaneously
     const [products, totalProducts] = await Promise.all([
       productService.loadProductsByScroll(

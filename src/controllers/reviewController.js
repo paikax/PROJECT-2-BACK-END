@@ -6,46 +6,65 @@ const mongoose = require("mongoose");
 exports.createReview = async (req, res) => {
   try {
     const { productId, rating, comment } = req.body;
-    console.log("User ID:", req.user.id);
-    console.log("Product ID:", productId);
-    const order = await Order.findOne({
-      userId: new mongoose.Types.ObjectId(req.user.id),
-      "orderItems.productId": new mongoose.Types.ObjectId(productId),
-      paymentStatus: "Paid",
-    });
+
     if (
       !mongoose.Types.ObjectId.isValid(req.user.id) ||
       !mongoose.Types.ObjectId.isValid(productId)
     ) {
       return res.status(400).json({ error: "Invalid ID format" });
     }
+
+    // Check if the user has already reviewed this product
+    const existingReview = await Review.findOne({
+      userId: req.user.id,
+      productId,
+    });
+
+    if (existingReview) {
+      return res
+        .status(403)
+        .json({ error: "You have already reviewed this product." });
+    }
+
+    // Ensure the user has purchased the product
+    const order = await Order.findOne({
+      userId: req.user.id,
+      "orderItems.productId": productId,
+      paymentStatus: "Paid",
+    });
+
     if (!order) {
-      console.log("No order found for the given criteria.");
       return res
         .status(403)
         .json({ error: "You must purchase the product before reviewing." });
     }
+
     const review = new Review({
       userId: req.user.id,
       productId,
       rating,
       comment,
     });
+
     await review.save();
+
     // Update the product's average rating
     const reviews = await Review.find({ productId });
     const totalRating = reviews.reduce((acc, review) => acc + review.rating, 0);
-    const averageRating = (totalRating / reviews.length).toFixed(2); // Average rating to 2 decimal places
+    const averageRating = (totalRating / reviews.length).toFixed(2);
+
     const product = await Product.findById(productId);
     if (product) {
-      product.rating = averageRating; // Update product rating
+      product.rating = averageRating;
       await product.save();
     }
+
     res.status(201).json(review);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 };
+
 // Get Reviews for a Product
 exports.getProductReviews = async (req, res) => {
   try {

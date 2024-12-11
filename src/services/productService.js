@@ -90,6 +90,9 @@ exports.countFilteredProducts = async (filters) => {
 function buildQuery(filters) {
   const query = {};
 
+  // Apply verification filter
+  query["verify.status"] = filters.verificationStatus || "approved";
+
   // Apply category filters
   if (filters.categories && filters.categories.length) {
     query.categoryId = { $in: filters.categories };
