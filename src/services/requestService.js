@@ -4,6 +4,7 @@ exports.createRequest = async ({ type, targetId, title, reason, createdBy }) => 
   const request = await Request.create({
     type,
     targetId,
+    targetModel: type == 'product' ? 'Product' : 'User',
     title,
     reason,
     createdBy,
