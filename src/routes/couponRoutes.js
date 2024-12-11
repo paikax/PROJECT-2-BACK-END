@@ -1,7 +1,7 @@
 const express = require("express");
 const couponController = require("../controllers/couponController");
 const { verifyToken } = require("../middleware/authMiddleware");
-const authorizeRole = require('../middleware/roleMiddleware');
+const authorizeRole = require("../middleware/roleMiddleware");
 const router = express.Router();
 
 /**
@@ -35,7 +35,7 @@ const router = express.Router();
  *               minCartPrice:
  *                 type: number
  *                 description: Minimum cart price to apply the coupon
- *               validity:
+ *               endDate:
  *                 type: string
  *                 format: date-time
  *                 description: Expiration date of the coupon
@@ -47,7 +47,12 @@ const router = express.Router();
  *       401:
  *         description: Unauthorized (invalid or missing token)
  */
-router.post("/coupons", verifyToken, authorizeRole('admin'), couponController.createCoupon);
+router.post(
+  "/coupons",
+  verifyToken,
+  authorizeRole("admin"),
+  couponController.createCoupon
+);
 
 /**
  * @swagger
@@ -77,7 +82,7 @@ router.post("/coupons", verifyToken, authorizeRole('admin'), couponController.cr
  *                   minCartPrice:
  *                     type: number
  *                     description: Minimum cart price to apply the coupon
- *                   validity:
+ *                   endDate:
  *                     type: string
  *                     format: date-time
  *                     description: Expiration date of the coupon
@@ -113,7 +118,7 @@ router.get("/coupons", couponController.getAllCoupons);
  *                   type: number
  *                 minCartPrice:
  *                   type: number
- *                 validity:
+ *                 endDate:
  *                   type: string
  *                   format: date-time
  *       404:
@@ -152,7 +157,7 @@ router.get("/coupons/:id", couponController.getCouponById);
  *               minCartPrice:
  *                 type: number
  *                 description: New minimum cart price to apply the coupon
- *               validity:
+ *               endDate:
  *                 type: string
  *                 format: date-time
  *                 description: New expiration date of the coupon
@@ -166,7 +171,12 @@ router.get("/coupons/:id", couponController.getCouponById);
  *       401:
  *         description: Unauthorized (invalid or missing token)
  */
-router.patch("/coupons/:id", verifyToken, authorizeRole('admin'), couponController.updateCoupon);
+router.patch(
+  "/coupons/:id",
+  verifyToken,
+  authorizeRole("admin"),
+  couponController.updateCoupon
+);
 
 /**
  * @swagger
@@ -191,7 +201,12 @@ router.patch("/coupons/:id", verifyToken, authorizeRole('admin'), couponControll
  *       401:
  *         description: Unauthorized (invalid or missing token)
  */
-router.delete("/coupons/:id", verifyToken, authorizeRole('admin'), couponController.deleteCoupon);
+router.delete(
+  "/coupons/:id",
+  verifyToken,
+  authorizeRole("admin"),
+  couponController.deleteCoupon
+);
 
 /**
  * @swagger

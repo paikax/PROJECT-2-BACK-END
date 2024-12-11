@@ -1,15 +1,17 @@
+const { cp } = require("fs");
 const Coupon = require("../models/Coupon");
 const cartService = require("../services/cartService"); // Import cartService for cart operations
 
 // Create a coupon
 exports.createCoupon = async (req, res) => {
   try {
-    const { code, discount, minCartPrice, validity, description } = req.body;
+      const { code, discount, minCartPrice, startDate, endDate, description } = req.body;
     const coupon = new Coupon({
       code,
       discount,
       minCartPrice,
-      validity,
+      startDate,
+      endDate,
       description,
       adminId: req.user.id,
     });
@@ -23,10 +25,10 @@ exports.createCoupon = async (req, res) => {
 // Update a coupon
 exports.updateCoupon = async (req, res) => {
   try {
-    const { code, discount, minCartPrice, validity, description } = req.body;
+      const { code, discount, minCartPrice, startDate, endDate, description } = req.body;
     const coupon = await Coupon.findByIdAndUpdate(
       req.params.id,
-      { code, discount, minCartPrice, validity, description },
+      { code, discount, minCartPrice, startDate, endDate, description },
       { new: true, runValidators: true }
     );
     if (!coupon) {
@@ -51,7 +53,10 @@ exports.getAllCoupons = async (req, res) => {
 // Get a coupon by ID
 exports.getCouponById = async (req, res) => {
   try {
-    const coupon = await Coupon.findById(req.params.id).populate("adminId", "fullName");
+    const coupon = await Coupon.findById(req.params.id).populate(
+      "adminId",
+      "fullName"
+    );
     if (!coupon) {
       return res.status(404).json({ error: "Coupon not found" });
     }
@@ -69,9 +74,11 @@ exports.deleteCoupon = async (req, res) => {
       return res.status(404).json({ error: "Coupon not found" });
     }
     if (coupon.adminId.toString() !== req.user.id) {
-      return res.status(403).json({ error: "Unauthorized to delete this coupon" });
+      return res
+        .status(403)
+        .json({ error: "Unauthorized to delete this coupon" });
     }
-
+    
     await Coupon.deleteOne({ _id: req.params.id });
     res.status(200).json({ message: "Coupon deleted successfully" });
   } catch (err) {
@@ -92,7 +99,9 @@ exports.applyCoupon = async (req, res) => {
     // Fetch the user's cart
     const cart = await cartService.getCart(userId);
     if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ error: "Cart is empty. Cannot apply a coupon." });
+      return res
+        .status(400)
+        .json({ error: "Cart is empty. Cannot apply a coupon." });
     }
 
     // Calculate the total price of the cart
@@ -104,7 +113,11 @@ exports.applyCoupon = async (req, res) => {
     }, 0);
 
     // Fetch the coupon and validate it
-    const coupon = await Coupon.findOne({ code: couponCode, validity: { $gte: new Date() } });
+    const coupon = await Coupon.findOne({
+      code: couponCode,
+      startDate: { $gte: new Date() },
+      endDate: { $gte: new Date() },
+    });
     if (!coupon) {
       return res.status(400).json({ error: "Invalid or expired coupon code." });
     }
@@ -126,7 +139,8 @@ exports.applyCoupon = async (req, res) => {
         code: coupon.code,
         discount: coupon.discount,
         minCartPrice: coupon.minCartPrice,
-        validity: coupon.validity,
+        startDate: coupon.startDate,
+        endDate: coupon.endDate,
         description: coupon.description,
       },
       cart: updatedCart,

@@ -20,7 +20,8 @@ exports.createCheckoutSession = async (
   if (cart.appliedCoupon) {
     const coupon = await Coupon.findOne({
       code: cart.appliedCoupon,
-      validity: { $gte: new Date() }, // Ensure the coupon is still valid
+      startDate: { $gte: new Date() },
+      endDate: { $gte: new Date() }, // Ensure the coupon is still valid
     });
 
     if (coupon) {
@@ -43,7 +44,7 @@ exports.createCheckoutSession = async (
 
   const lineItems = cart.items.map((item) => {
     const unitAmount = Math.round(
-      parseFloat(item.variantDetails?.price || item.product.price) 
+      parseFloat(item.variantDetails?.price || item.product.price)
     ); // Convert to smallest currency unit
 
     return {

@@ -30,7 +30,8 @@ exports.createOrderForPayLater = async (req, res) => {
       couponCode = cart.appliedCoupon; // Get the coupon code from the cart
       const coupon = await Coupon.findOne({
         code: couponCode,
-        validity: { $gte: new Date() },
+        startDate: { $gte: new Date() },
+        endDate: { $gte: new Date() },
       });
 
       if (coupon) {
@@ -168,12 +169,10 @@ exports.cancelOrder = async (req, res) => {
     }
 
     if (order.status !== "Processing") {
-      return res
-        .status(400)
-        .json({
-          error:
-            "Order can only be canceled when it is in the 'Processing' status.",
-        });
+      return res.status(400).json({
+        error:
+          "Order can only be canceled when it is in the 'Processing' status.",
+      });
     }
 
     // Update order status and payment status
@@ -227,7 +226,9 @@ exports.getSellerOrders = async (req, res) => {
     const sellerProducts = await Product.find({ sellerId }).select("_id");
 
     if (!sellerProducts || sellerProducts.length === 0) {
-      return res.status(404).json({ error: "No products found for this seller." });
+      return res
+        .status(404)
+        .json({ error: "No products found for this seller." });
     }
 
     // Extract product IDs
@@ -236,11 +237,14 @@ exports.getSellerOrders = async (req, res) => {
     // Find orders that include any of the seller's products
     const orders = await Order.find({
       "orderItems.productId": { $in: sellerProductIds },
-    }).populate("orderItems.productId", "name price imageUrls") // Populate product details
+    })
+      .populate("orderItems.productId", "name price imageUrls") // Populate product details
       .populate("userId", "fullName email phone"); // Optionally populate user details
 
     if (!orders || orders.length === 0) {
-      return res.status(404).json({ error: "No orders found for this seller's products." });
+      return res
+        .status(404)
+        .json({ error: "No orders found for this seller's products." });
     }
 
     res.status(200).json(orders);

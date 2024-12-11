@@ -29,7 +29,8 @@ exports.getCart = async (userId) => {
   if (cart.items.length > 0) {
     const validCoupons = await Coupon.find({
       minItemCount: { $lte: cart.items.length },
-      validity: { $gte: new Date() }, // Ensure the coupon is still valid
+      startDate: { $gte: new Date() },
+      endDate: { $gte: new Date() }, // Ensure the coupon is still valid
     });
 
     // Apply the highest discount coupon if applicable
@@ -176,7 +177,8 @@ exports.applyCouponToCart = async (userId, couponCode) => {
   // Validate the coupon
   const coupon = await Coupon.findOne({
     code: couponCode,
-    validity: { $gte: new Date() }, // Ensure the coupon is still valid
+    startDate: { $gte: new Date() },
+    endDate: { $gte: new Date() }, // Ensure the coupon is still valid
   });
 
   if (!coupon) {

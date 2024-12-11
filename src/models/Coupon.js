@@ -21,7 +21,7 @@ const couponSchema = new mongoose.Schema({
     ref: "User",
     required: true, // Ensure the coupon is associated with an admin
   },
-  validity: {
+  endDate: {
     type: Date,
     required: true, // Expiry date of the coupon
   },
@@ -29,9 +29,9 @@ const couponSchema = new mongoose.Schema({
     type: String,
     required: true, // Description of the coupon
   },
-  createdAt: {
+  startDate: {
     type: Date,
-    default: Date.now,
+    required: true,
   },
 });
 
