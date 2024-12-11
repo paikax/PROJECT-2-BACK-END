@@ -365,7 +365,7 @@ exports.rejectRequest = async (req, res) => {
 
       // Handle rejection logic for user
       // You might want to set a status or log the rejection
-      user.role = 'rejected'; // Adjust this logic as necessary
+      user.role = 'user'; // Adjust this logic as necessary
       await user.save();
     }
 
