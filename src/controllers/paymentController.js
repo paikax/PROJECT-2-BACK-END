@@ -91,7 +91,7 @@ exports.paymentSuccess = async (req, res) => {
     }
 
     // Fetch metadata from the payment session
-    const totalPrice = parseFloat(session.amount_total / 100); // Stripe total is in smallest currency unit
+    const totalPrice = parseFloat(session.amount_total); // Stripe total is in smallest currency unit
     const deliveryAddress = session.metadata.deliveryAddress;
     const couponCode = session.metadata.couponCode;
     const discount = parseFloat(session.metadata.discount || 0);

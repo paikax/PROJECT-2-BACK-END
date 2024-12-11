@@ -315,7 +315,9 @@ router.post(
     vnp_Params["vnp_Locale"] = locale;
     vnp_Params["vnp_CurrCode"] = currCode;
     vnp_Params["vnp_TxnRef"] = orderId;
-    vnp_Params["vnp_OrderInfo"] = "Payment for order ID:" + orderId;
+    vnp_Params[
+      "vnp_OrderInfo"
+    ] = `Payment for order ID: ${orderId} | Address: ${deliveryAddress} | PaymentMethod: ${paymentMethod}`;
     vnp_Params["vnp_OrderType"] = "other";
     vnp_Params["vnp_Amount"] = amount * 100; // VNPay expects amount in cents
     vnp_Params["vnp_ReturnUrl"] = returnUrl;
@@ -384,6 +386,20 @@ router.get(
     const userId = req.user ? req.user.id : null; // Get user ID from token
     let vnp_Params = req.query;
     let secureHash = vnp_Params["vnp_SecureHash"];
+    const orderInfo = vnp_Params["vnp_OrderInfo"];
+    const regex =
+      /Payment for order ID: (\S+) \| Address: (.+) \| PaymentMethod: (\S+)/;
+    const match = orderInfo.match(regex);
+
+    if (!match) {
+      return res
+        .status(400)
+        .json({ error: "Invalid OrderInfo format. Cannot extract details." });
+    }
+
+    const orderId = match[1];
+    const deliveryAddress = decodeURIComponent(match[2]);
+    const paymentMethod = match[3];
 
     delete vnp_Params["vnp_SecureHash"];
     delete vnp_Params["vnp_SecureHashType"];
@@ -465,10 +481,10 @@ router.get(
         userId: userId,
         status: "Pending",
         paymentStatus: "Paid",
-        paymentMethod: cart.paymentMethod || "VNPay", // Include payment method
+        paymentMethod,
+        deliveryAddress, // Include payment method
         totalQuantity: totalQuantity,
         totalPrice: finalPrice, // Use discounted price here
-        deliveryAddress: cart.deliveryAddress || "Default Address",
         orderItems: orderItems,
         couponCode: couponCode, // Save coupon code
         discountAmount: discount > 0 ? (totalPrice * discount) / 100 : 0, // Save discount amount
