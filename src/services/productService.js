@@ -109,6 +109,15 @@ function buildQuery(filters) {
     query.price = { $gte: minPrice, $lte: maxPrice };
   }
 
+  if (filters.keyword) {
+    query.$or = query.$or || [];
+    query.$or.push(
+      { name: { $regex: filters.keyword, $options: "i" } },
+      { description: { $regex: filters.keyword, $options: "i" } },
+      { "sellerId.fullName": { $regex: filters.keyword, $options: "i" } }
+    );
+  }
+
   return query;
 }
 

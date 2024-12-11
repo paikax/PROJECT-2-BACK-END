@@ -38,13 +38,14 @@ exports.createProduct = async (req, res) => {
 // Get 8 product per scrolling or page
 exports.loadProductsByScroll = async (req, res) => {
   try {
-    const { category, brand, price, skip = 0, limit = 8 } = req.query;
+    const { category, brand, price, skip = 0, limit = 8, keyword } = req.query;
 
     // Prepare filters object
     const filters = {
       categories: category ? category.split(",") : [],
       brands: brand ? brand.split(",") : [],
       price: price ? price.split(",").map(Number) : null,
+      keyword
     };
 
     filters.verificationStatus = "approved";
