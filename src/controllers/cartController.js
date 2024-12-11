@@ -13,7 +13,8 @@ exports.getCart = async (req, res) => {
 // Add or update a product in the cart
 exports.addToCart = async (req, res) => {
   try {
-    const { productId, variantId, count, deliveryAddress, paymentMethod } = req.body;
+    const { productId, variantId, count, deliveryAddress, paymentMethod } =
+      req.body;
     const cart = await cartService.addToCart(
       req.user.id,
       productId,
@@ -31,7 +32,10 @@ exports.addToCart = async (req, res) => {
 // Remove a product from the cart
 exports.removeFromCart = async (req, res) => {
   try {
-    const { productId, variantId } = req.params;
+    const { productId, variantId } = req.query; // Use query parameters
+    if (!productId) {
+      throw new Error("Product ID is required");
+    }
     const cart = await cartService.removeFromCart(
       req.user.id,
       productId,
@@ -42,11 +46,11 @@ exports.removeFromCart = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
-
 // Update the count of a product in the cart
 exports.updateCartItem = async (req, res) => {
   try {
-    const { productId, variantId, count, deliveryAddress, paymentMethod } = req.body;
+    const { productId, variantId, count, deliveryAddress, paymentMethod } =
+      req.body;
     const cart = await cartService.updateCartItem(
       req.user.id,
       productId,

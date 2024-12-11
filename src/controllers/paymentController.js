@@ -3,6 +3,7 @@ const paymentService = require("../services/paymentService");
 const cartService = require("../services/cartService");
 const Order = require("../models/Order");
 const Coupon = require("../models/Coupon");
+const Product = require("../models/Product");
 
 // Create a checkout session for Pay Now
 exports.createCheckoutSession = async (req, res) => {
@@ -97,6 +98,40 @@ exports.paymentSuccess = async (req, res) => {
     const couponCode = session.metadata.couponCode;
     const discount = parseFloat(session.metadata.discount || 0);
     const paymentMethod = session.metadata.paymentMethod;
+
+    // Verify stock availability before creating the order
+    for (const item of cart.items) {
+      const product = await Product.findById(item.product._id);
+
+      if (!product) {
+        throw new Error(`Product with ID ${item.product._id} not found.`);
+      }
+
+      if (item.variantId) {
+        // Check stock for the variant
+        const variant = product.variants.id(item.variantId);
+
+        if (!variant) {
+          throw new Error(`Variant with ID ${item.variantId} not found.`);
+        }
+
+        if (variant.stockQuantity < item.count) {
+          throw new Error(
+            `Insufficient stock for variant '${
+              variant.attributes.get("name") || "unknown"
+            }'. Only ${variant.stockQuantity} left in stock.`
+          );
+        }
+      } else {
+        // Check stock for the main product
+        if (product.stockQuantity < item.count) {
+          throw new Error(
+            `Insufficient stock for product '${product.name}'. Only ${product.stockQuantity} left in stock.`
+          );
+        }
+      }
+    }
+
     // Create the order
     const order = new Order({
       userId: userId,
@@ -119,6 +154,23 @@ exports.paymentSuccess = async (req, res) => {
     });
 
     await order.save();
+
+    // Decrease stock quantity for each ordered item
+    for (const item of cart.items) {
+      if (item.variantId) {
+        // Update stock for a variant
+        await Product.updateOne(
+          { _id: item.product._id, "variants._id": item.variantId },
+          { $inc: { "variants.$.stockQuantity": -item.count } }
+        );
+      } else {
+        // Update stock for the product (no variants)
+        await Product.updateOne(
+          { _id: item.product._id },
+          { $inc: { stockQuantity: -item.count } }
+        );
+      }
+    }
 
     // Clear the cart after a successful order
     await cartService.clearCart(userId);

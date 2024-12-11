@@ -117,6 +117,49 @@ exports.updateOrderStatuses = async () => {
   }
 };
 
+// Function to decrease stock quantity
+async function decreaseStock(orderItems) {
+  for (const item of orderItems) {
+    const product = await Product.findById(item.productId);
+
+    if (!product) {
+      throw new Error(`Product with ID ${item.productId} not found.`);
+    }
+
+    // If the product has variants, update the corresponding variant's stock
+    if (item.variantId) {
+      const variant = product.variants.find(
+        (v) => v._id.toString() === item.variantId.toString()
+      );
+      if (!variant) {
+        throw new Error(
+          `Variant with ID ${item.variantId} not found for product ${item.productId}.`
+        );
+      }
+
+      // Check if stock is sufficient
+      if (variant.stockQuantity < item.quantity) {
+        throw new Error(
+          `Insufficient stock for product ${product.name}, variant ID ${item.variantId}.`
+        );
+      }
+
+      // Decrease the variant's stock quantity
+      variant.stockQuantity -= item.quantity;
+    } else {
+      // If the product does not have variants, update the product's stock
+      if (product.stockQuantity < item.quantity) {
+        throw new Error(`Insufficient stock for product ${product.name}.`);
+      }
+
+      product.stockQuantity -= item.quantity;
+    }
+
+    // Save the updated product
+    await product.save();
+  }
+}
+
 // Pay for an order after delivery
 exports.payForOrder = async (req, res) => {
   try {
@@ -139,17 +182,31 @@ exports.payForOrder = async (req, res) => {
       return res.status(400).json({ error: "Order is already paid." });
     }
 
+    // Create a checkout session
     const sessionUrl = await paymentService.createCheckoutSession(
       userId,
-      orderId
+      orderId,
+      {
+        totalPrice: order.totalPrice,
+        deliveryAddress: order.deliveryAddress,
+        appliedCoupon: order.couponCode,
+        discount: order.discountAmount,
+        paymentMethod: order.paymentMethod,
+      }
     );
 
-    res.status(200).json({ url: sessionUrl });
+    // Decrease the stock quantity after successful payment
+    await decreaseStock(order.orderItems);
+
+    // Update the order's payment status
+    order.paymentStatus = "Paid";
+    await order.save();
+
+    res.status(200).json({ message: "Payment successful.", url: sessionUrl });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
-
 // Cancel an order
 exports.cancelOrder = async (req, res) => {
   try {

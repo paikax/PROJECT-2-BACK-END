@@ -493,6 +493,45 @@ router.get(
       });
 
       await order.save();
+      const Product = require("../models/Product"); // Import the Product model
+
+      for (const item of orderItems) {
+        const product = await Product.findById(item.productId);
+        if (!product) {
+          return res
+            .status(400)
+            .json({ error: `Product ${item.productId} not found.` });
+        }
+
+        // Find the variant and reduce its stock
+        if (item.variantId) {
+          const variant = product.variants.id(item.variantId);
+          if (!variant) {
+            return res.status(400).json({
+              error: `Variant ${item.variantId} not found for product ${item.productId}.`,
+            });
+          }
+
+          if (variant.stockQuantity < item.quantity) {
+            return res.status(400).json({
+              error: `Not enough stock for variant ${item.variantId}.`,
+            });
+          }
+
+          variant.stockQuantity -= item.quantity; // Reduce stock quantity for the variant
+        } else {
+          // Reduce stock for the main product if no variant is specified
+          if (product.stockQuantity < item.quantity) {
+            return res.status(400).json({
+              error: `Not enough stock for product ${item.productId}.`,
+            });
+          }
+
+          product.stockQuantity -= item.quantity; // Reduce stock quantity for the main product
+        }
+
+        await product.save(); // Save the updated product
+      }
       await cartService.clearCart(userId); // Clear the cart after creating the order
 
       return res.status(200).json({
