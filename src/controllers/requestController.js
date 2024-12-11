@@ -98,42 +98,7 @@ exports.getAllRequests = async (req, res) => {
       // Lấy danh sách requests
       const requests = await RequestService.getAllRequests(filter);
   
-      console.log(`[INFO] Đã lấy được ${requests.length} requests. Bắt đầu xử lý thêm dữ liệu target.`);
-  
-      // Xử lý chi tiết target (user/product) và thêm `additionalData`
-      const detailedRequests = await Promise.all(
-        requests.map(async (request) => {
-          const { type, targetId } = request;
-  
-          if (!type || !targetId) {
-            console.warn(`[WARN] Request với ID: ${request._id} bị thiếu type hoặc targetId`);
-            return { ...request.toObject(), additionalData: null }; // Đảm bảo có `additionalData`
-          }
-  
-          try {
-            let additionalData = null;
-  
-            // Lấy dữ liệu từ service tương ứng
-            if (type === 'user') {
-              console.log(`[INFO] Lấy thông tin user với ID: ${targetId}`);
-              additionalData = await userService.getUserById(targetId);
-            } else if (type === 'product') {
-              console.log(`[INFO] Lấy thông tin product với ID: ${targetId}`);
-              additionalData = await productService.getProductById(targetId);
-            } else {
-              console.warn(`[WARN] Request với ID: ${request._id} có type không hợp lệ: ${type}`);
-            }
-  
-            return { ...request.toObject(), additionalData };
-          } catch (error) {
-            console.error(`[ERROR] Lỗi khi lấy dữ liệu target cho request ID: ${request._id}. Error: ${error.message}`);
-            return { ...request.toObject(), additionalData: null }; // Trả về request gốc với `additionalData` là null
-          }
-        })
-      );
-  
-      console.log(`[INFO] Hoàn tất xử lý requests. Trả dữ liệu cho frontend.`);
-      res.status(200).json(detailedRequests);
+      res.status(200).json(requests);
     } catch (err) {
       console.error(`[ERROR] Lỗi xảy ra khi lấy danh sách requests: ${err.message}`);
       res.status(400).json({ error: err.message });
