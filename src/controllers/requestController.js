@@ -305,7 +305,7 @@ exports.approveRequest = async (req, res) => {
       }
 
       // Update user's status or role as needed
-      user.role = 'approved'; // Adjust this logic as necessary
+      user.role = 'seller'; // Adjust this logic as necessary
       await user.save();
     }
 
