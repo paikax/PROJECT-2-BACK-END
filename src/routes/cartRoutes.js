@@ -292,7 +292,7 @@ router.post(
     }
 
     // Calculate final price after discount
-    const finalPrice = totalPrice - (totalPrice * discount / 100);
+    const finalPrice = totalPrice - (totalPrice * discount) / 100;
 
     // VNPay configuration and logic
     let tmnCode = vnp_TmnCode; // Use config file
@@ -448,12 +448,14 @@ router.get(
             });
           }
         } else {
-          return res.status(400).json({ error: "Invalid or expired coupon code." });
+          return res
+            .status(400)
+            .json({ error: "Invalid or expired coupon code." });
         }
       }
 
       // Calculate final price after discount
-      const finalPrice = totalPrice - (totalPrice * discount / 100);
+      const finalPrice = totalPrice - (totalPrice * discount) / 100;
 
       const order = new Order({
         userId: userId,
@@ -464,7 +466,7 @@ router.get(
         deliveryAddress: cart.deliveryAddress || "Default Address",
         orderItems: orderItems,
         couponCode: couponCode, // Save coupon code
-        discountAmount: discount > 0 ? (totalPrice * discount / 100) : 0, // Save discount amount
+        discountAmount: discount > 0 ? (totalPrice * discount) / 100 : 0, // Save discount amount
       });
 
       await order.save();
