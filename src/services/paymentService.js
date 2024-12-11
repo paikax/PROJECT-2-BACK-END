@@ -20,7 +20,6 @@ exports.createCheckoutSession = async (
   if (cart.appliedCoupon) {
     const coupon = await Coupon.findOne({
       code: cart.appliedCoupon,
-      startDate: { $gte: new Date() },
       endDate: { $gte: new Date() }, // Ensure the coupon is still valid
     });
 

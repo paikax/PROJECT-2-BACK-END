@@ -37,7 +37,6 @@ exports.createCheckoutSession = async (req, res) => {
       couponCode = cart.appliedCoupon; // Get the coupon code from the cart
       const coupon = await Coupon.findOne({
         code: couponCode,
-        startDate: { $gte: new Date() },
         endDate: { $gte: new Date() },
       });
 

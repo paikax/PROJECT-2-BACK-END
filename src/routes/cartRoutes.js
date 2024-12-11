@@ -277,7 +277,6 @@ router.post(
       const couponCode = cart.appliedCoupon; // Get the coupon code from the cart
       const coupon = await Coupon.findOne({
         code: couponCode,
-        startDate: { $gte: new Date() },
         endDate: { $gte: new Date() },
       });
 
@@ -457,7 +456,6 @@ router.get(
       if (couponCode) {
         const coupon = await Coupon.findOne({
           code: couponCode,
-          startDate: { $gte: new Date() },
           endDate: { $gte: new Date() },
         });
 
