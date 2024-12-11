@@ -72,50 +72,64 @@ exports.createProduct = async ({
 exports.loadProductsByScroll = async (filters, skip, limit) => {
   const query = buildQuery(filters);
 
-  // Retrieve paginated products
-  return await Product.find(query)
-    .skip(skip)
-    .limit(limit)
-    .sort({ createdAt: -1 }); // Sort by newest products
+  try {
+    // Retrieve paginated products
+    return await Product.find(query)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }); // Sort by newest products
+  } catch (error) {
+    console.error("Error loading products by scroll:", error.message);
+    return [];
+  }
 };
 
 exports.countFilteredProducts = async (filters) => {
   const query = buildQuery(filters);
 
-  // Count documents matching the query
-  return await Product.countDocuments(query);
+  try {
+    // Count documents matching the query
+    return await Product.countDocuments(query);
+  } catch (error) {
+    console.error("Error counting filtered products:", error.message);
+    return 0; // Return 0 if an error occurs
+  }
 };
 
 // Utility function to build query
 function buildQuery(filters) {
   const query = {};
 
-  // Apply verification filter
+  // Verification filter
   query["verify.status"] = filters.verificationStatus || "approved";
 
-  // Apply category filters
-  if (filters.categories && filters.categories.length) {
+  // Categories filter
+  if (Array.isArray(filters.categories) && filters.categories.length > 0) {
     query.categoryId = { $in: filters.categories };
   }
 
-  // Apply brand filters
-  if (filters.brands && filters.brands.length) {
+  // Brands filter
+  if (Array.isArray(filters.brands) && filters.brands.length > 0) {
     query.brandId = { $in: filters.brands };
   }
 
-  // Apply price range filter
-  if (filters.price) {
-    const [minPrice, maxPrice] = filters.price;
-    query.price = { $gte: minPrice, $lte: maxPrice };
+  // Price range filter
+  if (filters.price && filters.price.length === 2) {
+    const [minPrice, maxPrice] = filters.price.map(Number);
+    if (!isNaN(minPrice) && !isNaN(maxPrice)) {
+      query.price = { $gte: minPrice, $lte: maxPrice };
+    }
   }
 
+  // Keyword search
   if (filters.keyword) {
-    query.$or = query.$or || [];
-    query.$or.push(
-      { name: { $regex: filters.keyword, $options: "i" } },
-      { description: { $regex: filters.keyword, $options: "i" } },
-      { "sellerId.fullName": { $regex: filters.keyword, $options: "i" } }
-    );
+    const regex = { $regex: filters.keyword, $options: "i" };
+    query.$or = [
+      { name: regex },
+      { description: regex },
+      { "sellerId.fullName": regex },
+      { tags: regex }, // Assuming you have a 'tags' field
+    ];
   }
 
   return query;

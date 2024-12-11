@@ -45,7 +45,7 @@ exports.loadProductsByScroll = async (req, res) => {
       categories: category ? category.split(",") : [],
       brands: brand ? brand.split(",") : [],
       price: price ? price.split(",").map(Number) : null,
-      keyword
+      keyword,
     };
 
     filters.verificationStatus = "approved";
