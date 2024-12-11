@@ -272,6 +272,7 @@ exports.getAllRequests = async (req, res) => {
   };
 
 // API to approve a request
+// API to approve a request
 exports.approveRequest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -282,34 +283,42 @@ exports.approveRequest = async (req, res) => {
       return res.status(404).json({ error: 'Request not found' });
     }
 
-    // Verify the request type is 'product'
-    if (request.type !== 'product') {
-      return res.status(400).json({ error: 'Only product requests can be approved via this API' });
+    // Handle product requests
+    if (request.type === 'product') {
+      const product = await Product.findById(request.targetId);
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found for the given request' });
+      }
+
+      // Update product's verify status to approved with feedback
+      product.verify.status = 'approved';
+      product.verify.requestId = request._id;
+      product.verify.feedback = 'Product approved successfully';
+      await product.save();
     }
 
-    // Verify if the target product exists
-    const product = await Product.findById(request.targetId);
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found for the given request' });
-    }
+    // Handle user requests
+    if (request.type === 'user') {
+      const user = await User.findById(request.targetId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found for the given request' });
+      }
 
-    // Update product's verify status to approved with feedback
-    product.verify.status = 'approved';
-    product.verify.requestId = request._id;
-    product.verify.feedback = 'Product approved successfully';
-    await product.save();
+      // Update user's status or role as needed
+      user.role = 'approved'; // Adjust this logic as necessary
+      await user.save();
+    }
 
     // Update the request status and result
     request.status = 'done';
     request.result = 'approved';
-    request.feedback = 'Product approved successfully';
+    request.feedback = request.type === 'product' ? 'Product approved successfully' : 'User approved successfully';
     request.updatedBy = req.user.id;
     await request.save();
 
     res.status(200).json({
       message: 'Request approved successfully',
       request,
-      product,
     });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -333,22 +342,32 @@ exports.rejectRequest = async (req, res) => {
       return res.status(404).json({ error: 'Request not found' });
     }
 
-    // Verify the request type is 'product'
-    if (request.type !== 'product') {
-      return res.status(400).json({ error: 'Only product requests can be rejected via this API' });
+    // Handle product requests
+    if (request.type === 'product') {
+      const product = await Product.findById(request.targetId);
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found for the given request' });
+      }
+
+      // Update product's verify status to rejected with feedback
+      product.verify.status = 'rejected';
+      product.verify.requestId = request._id;
+      product.verify.feedback = feedback;
+      await product.save();
     }
 
-    // Verify if the target product exists
-    const product = await Product.findById(request.targetId);
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found for the given request' });
-    }
+    // Handle user requests
+    if (request.type === 'user') {
+      const user = await User.findById(request.targetId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found for the given request' });
+      }
 
-    // Update product's verify status to rejected with feedback
-    product.verify.status = 'rejected';
-    product.verify.requestId = request._id;
-    product.verify.feedback = feedback;
-    await product.save();
+      // Handle rejection logic for user
+      // You might want to set a status or log the rejection
+      user.role = 'rejected'; // Adjust this logic as necessary
+      await user.save();
+    }
 
     // Update the request status and result
     request.status = 'done';
@@ -360,7 +379,6 @@ exports.rejectRequest = async (req, res) => {
     res.status(200).json({
       message: 'Request rejected successfully',
       request,
-      product,
     });
   } catch (err) {
     res.status(400).json({ error: err.message });
