@@ -29,6 +29,7 @@ const shoppingCartSchema = new mongoose.Schema(
     deliveryAddress: { type: String },
     appliedCoupon: { type: String, default: null },
     discountedTotal: { type: Number, default: 0 }, // New field for the discounted total price
+    paymentMethod: { type: String }, // Add this line
   },
   { timestamps: true }
 );

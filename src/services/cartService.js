@@ -50,7 +50,8 @@ exports.addToCart = async (
   productId,
   variantId,
   count,
-  deliveryAddress
+  deliveryAddress,
+  paymentMethod
 ) => {
   const product = await Product.findById(productId);
   if (!product) {
@@ -87,7 +88,7 @@ exports.addToCart = async (
   } else {
     cart.items.push({ product: productId, variantId, count });
   }
-
+  cart.paymentMethod = paymentMethod;
   await cart.save();
   return cart;
 };

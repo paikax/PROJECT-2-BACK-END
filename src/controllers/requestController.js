@@ -1,8 +1,9 @@
 const RequestService = require('../services/requestService');
-const ProductService = require('../services/productService');
-const UserService = require('../services/userService');
+const productService = require("../services/productService");
+const userService = require('../services/userService');
 const Product = require('../models/Product');  // Sửa đường dẫn phù hợp với dự án của bạn
 const User = require('../models/User');
+
 const mongoose = require('mongoose'); // Import mongoose for ObjectId
 
 exports.createRequest = async (req, res) => {
@@ -74,8 +75,10 @@ exports.createRequest = async (req, res) => {
   }
 };
 
-  exports.getAllRequests = async (req, res) => {
+exports.getAllRequests = async (req, res) => {
     try {
+      console.log(`[INFO] Bắt đầu lấy danh sách requests với bộ lọc từ query: ${JSON.stringify(req.query)}`);
+      
       const { type, status, keyword, startDate, endDate } = req.query;
       let filter = {};
   
@@ -92,37 +95,132 @@ exports.createRequest = async (req, res) => {
         filter.createdBy = req.user.id; // User chỉ xem request của chính mình
       }
   
+      // Lấy danh sách requests
       const requests = await RequestService.getAllRequests(filter);
-      res.status(200).json(requests);
+  
+      console.log(`[INFO] Đã lấy được ${requests.length} requests. Bắt đầu xử lý thêm dữ liệu target.`);
+  
+      // Xử lý chi tiết target (user/product) và thêm `additionalData`
+      const detailedRequests = await Promise.all(
+        requests.map(async (request) => {
+          const { type, targetId } = request;
+  
+          if (!type || !targetId) {
+            console.warn(`[WARN] Request với ID: ${request._id} bị thiếu type hoặc targetId`);
+            return { ...request.toObject(), additionalData: null }; // Đảm bảo có `additionalData`
+          }
+  
+          try {
+            let additionalData = null;
+  
+            // Lấy dữ liệu từ service tương ứng
+            if (type === 'user') {
+              console.log(`[INFO] Lấy thông tin user với ID: ${targetId}`);
+              additionalData = await userService.getUserById(targetId);
+            } else if (type === 'product') {
+              console.log(`[INFO] Lấy thông tin product với ID: ${targetId}`);
+              additionalData = await productService.getProductById(targetId);
+            } else {
+              console.warn(`[WARN] Request với ID: ${request._id} có type không hợp lệ: ${type}`);
+            }
+  
+            return { ...request.toObject(), additionalData };
+          } catch (error) {
+            console.error(`[ERROR] Lỗi khi lấy dữ liệu target cho request ID: ${request._id}. Error: ${error.message}`);
+            return { ...request.toObject(), additionalData: null }; // Trả về request gốc với `additionalData` là null
+          }
+        })
+      );
+  
+      console.log(`[INFO] Hoàn tất xử lý requests. Trả dữ liệu cho frontend.`);
+      res.status(200).json(detailedRequests);
     } catch (err) {
+      console.error(`[ERROR] Lỗi xảy ra khi lấy danh sách requests: ${err.message}`);
       res.status(400).json({ error: err.message });
     }
   };
+  
+  
   
 
   exports.getRequestById = async (req, res) => {
     try {
+      console.log(`[INFO] Bắt đầu xử lý request với ID: ${req.params.id}`);
+  
       const { id } = req.params;
   
+      // Lấy request từ cơ sở dữ liệu
+      console.log(`[INFO] Lấy request từ cơ sở dữ liệu`);
       const request = await RequestService.getRequestById(id);
-      if (!request) return res.status(404).json({ error: 'Request not found' });
+      if (!request) {
+        console.error(`[ERROR] Không tìm thấy request với ID: ${id}`);
+        return res.status(404).json({ error: 'Request not found' });
+      }
+  
+      console.log(`[INFO] Đã tìm thấy request: ${JSON.stringify(request)}`);
   
       // Phân quyền: Chỉ admin hoặc người tạo mới có thể xem
       if (req.user.role !== 'admin' && request.createdBy.toString() !== req.user.id) {
+        console.error(`[ERROR] Người dùng không có quyền truy cập request`);
         return res.status(403).json({ error: 'Access denied' });
       }
   
-      // Chuyển trạng thái từ unread sang pending
-      if (request.status === 'unread' && req.user.role == 'admin') {
+      // Lấy type và targetId từ request
+      const { type, targetId } = request; // Giả sử request chứa field type và targetId
+      if (!type || !targetId) {
+        console.error(`[ERROR] type hoặc targetId bị thiếu trong request`);
+        return res.status(400).json({ error: 'Type or Target ID is missing from the request' });
+      }
+  
+      let additionalData = null;
+  
+      if (type === 'user') {
+        console.log(`[INFO] Xử lý targetId là user với ID: ${targetId}`);
+        const userExists = await User.findById(targetId);
+        if (!userExists) {
+          console.error(`[ERROR] Không tìm thấy user với ID: ${targetId}`);
+          return res.status(404).json({ error: 'User not found' });
+        }
+  
+        additionalData = await userService.getUserById(targetId);
+        console.log(`[INFO] Đã lấy thông tin user: ${JSON.stringify(additionalData)}`);
+      } else if (type === 'product') {
+        console.log(`[INFO] Xử lý targetId là product với ID: ${targetId}`);
+        const productExists = await Product.findById(targetId);
+        if (!productExists) {
+          console.error(`[ERROR] Không tìm thấy product với ID: ${targetId}`);
+          return res.status(404).json({ error: 'Product not found' });
+        }
+  
+        additionalData = await productService.getProductById(targetId);
+        console.log(`[INFO] Đã lấy thông tin product: ${JSON.stringify(additionalData)}`);
+      } else {
+        console.error(`[ERROR] Loại type không hợp lệ: ${type}`);
+        return res.status(400).json({ error: 'Invalid type' });
+      }
+  
+      // Chuyển trạng thái từ unread sang pending nếu cần
+      if (request.status === 'unread' && req.user.role === 'admin') {
+        console.log(`[INFO] Đổi trạng thái request từ 'unread' sang 'pending'`);
         request.status = 'pending';
         await request.save();
       }
   
-      res.status(200).json(request);
+      // Trả dữ liệu cho frontend
+      const responseData = {
+        request,
+        additionalData, // Dữ liệu thêm từ user hoặc product
+      };
+  
+      console.log(`[INFO] Trả dữ liệu response: ${JSON.stringify(responseData)}`);
+      res.status(200).json(responseData);
     } catch (err) {
+      console.error(`[ERROR] Lỗi xảy ra trong quá trình xử lý: ${err.message}`);
       res.status(400).json({ error: err.message });
     }
   };
+  
+  
 
   exports.updateRequest = async (req, res) => {
     try {
@@ -133,6 +231,10 @@ exports.createRequest = async (req, res) => {
       const request = await RequestService.getRequestById(id);
       if (!request) return res.status(404).json({ error: 'Request not found' });
   
+      if (request.status === 'done') {
+        return res.status(400).json({ error: 'Cannot update a request that is already marked as done' });
+      }
+      
       // Check if feedback is required
       if (result && result !== 'pending' && !feedback) {
         return res.status(400).json({ error: 'Feedback is required for approved or rejected requests' });
@@ -159,14 +261,14 @@ exports.createRequest = async (req, res) => {
       const updates = { verify: { status: result, requestId: id, feedback: feedback } }; // Include feedback
       switch (request.type) {
         case 'product':
-          await ProductService.updateVerifyStatus(request.targetId, updates);
+          await productService.updateVerifyStatus(request.targetId, updates);
           // Also update the product's feedback
           const product = await Product.findById(request.targetId);
           product.verify.feedback = feedback; // Store feedback in product
           await product.save();
           break;
         case 'user':
-          await UserService.updateRoleAndVerify(request.targetId, result, updates);
+          await userService.updateRoleAndVerify(request.targetId, result, updates);
           break;
       }
   

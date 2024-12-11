@@ -72,7 +72,7 @@ exports.deleteCoupon = async (req, res) => {
       return res.status(403).json({ error: "Unauthorized to delete this coupon" });
     }
 
-    await coupon.remove();
+    await Coupon.deleteOne({ _id: req.params.id });
     res.status(200).json({ message: "Coupon deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
