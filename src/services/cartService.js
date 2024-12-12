@@ -93,7 +93,7 @@ exports.addToCart = async (
   await cart.save();
   return cart;
 };
-
+// test
 // Remove a product from the cart
 exports.removeFromCart = async (userId, productId, variantId) => {
   const cart = await ShoppingCart.findOne({ user: userId });
