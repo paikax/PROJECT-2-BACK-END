@@ -21,7 +21,7 @@ require("dotenv").config({ path: "./../development/.env" });
 
 const allowedOrigins = [
   process.env.CLIENT_URL,
-  "https://e-commerce-dev-g5.vercel.app",
+  "https://e-commerce-dev-g5-fe-ohsd.vercel.app",
   "https://project-2-back-end.onrender.com",
   "https://dev-g5.vercel.app",
   "http://localhost:3000",
